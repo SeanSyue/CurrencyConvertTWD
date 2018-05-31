@@ -8,7 +8,7 @@ class _CurrencyTable:
     Including functions for inspecting available currencies, currency rates and exchange type
     """
 
-    def __init__(self, file_):
+    def __init__(self):
         # Some meta constants
         self._base = 'NTD'
         self._cash = 'cash'
@@ -20,6 +20,8 @@ class _CurrencyTable:
 
         # Column names of exchange rates
         self._ex_col_names = [self._cash_buy, self._cash_sell, self._spot_buy, self._spot_sell]
+        # Available exchange types
+        self._ex_types = {self._cash, self._spot}
 
         # Descriptions of each currency
         self._info_dict = {'USD': 'US Dollar', 'HKD': 'Hong Kong Dollar', 'GBP': 'British Pound',
@@ -29,6 +31,10 @@ class _CurrencyTable:
                            'PHP': 'Philippine Peso', 'IDR': 'Indonesian Rupiah', 'EUR': 'Euro',
                            'KRW': 'Korean Won', 'VND': 'Vietnam Dong', 'MYR': 'Malaysian Ringgit', 'CNY': 'China Yuan'}
 
+        self._df = None
+        self._cur_list = None
+
+    def load_data(self, file_):
         # Load csv file as data-frame
         self._df = pandas.read_csv(file_, index_col=False,
                                    usecols=['Currency', 'Cash', 'Spot', 'Cash.1', 'Spot.1']) \
@@ -40,8 +46,6 @@ class _CurrencyTable:
 
         # Available currencies for exchange
         self._cur_list = [cur_name for cur_name in self._df.index.values] + [self._base]
-        # Available exchange types
-        self._ex_types = {self._cash, self._spot}
 
     def get_cash_buy(self, cur):
         """ Get one single currency rate """
@@ -86,8 +90,8 @@ class _SimpleConverter(_CurrencyTable):
     Only handle foreign currency to/from base currency exchange
     """
 
-    def __init__(self, file_):
-        _CurrencyTable.__init__(self, file_)
+    def __init__(self):
+        _CurrencyTable.__init__(self)
 
     def _to_base_cash(self, cur, value):
         try:
@@ -133,8 +137,8 @@ class _SimpleConverter(_CurrencyTable):
 class CurrencyConverter(_SimpleConverter):
     """ Main converter """
 
-    def __init__(self, file_):
-        _SimpleConverter.__init__(self, file_)
+    def __init__(self):
+        _SimpleConverter.__init__(self)
 
     def _to_base(self, value, from_cur, from_type):
         if from_type == self._cash:
@@ -207,7 +211,8 @@ class CurrencyConverter(_SimpleConverter):
 if __name__ == '__main__':
     """ TEST COMMANDS """
     file = 'ExchangeRate@201805301602.csv'
-    cvt = CurrencyConverter(file)
+    cvt = CurrencyConverter()
+    cvt.load_data(file)
 
     print(cvt.get_cash_buy('HKD'))
     print(cvt.get_spot_sell('USD'))
