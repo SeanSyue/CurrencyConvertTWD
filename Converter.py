@@ -7,7 +7,9 @@ class _CurrencyTable:
     Basic currency table loader.
     Including functions for inspecting available currencies, currency rates and exchange type
     """
+
     def __init__(self, file_):
+        # Some meta constants
         self._base = 'NTD'
         self._cash = 'cash'
         self._spot = 'spot'
@@ -15,14 +17,17 @@ class _CurrencyTable:
         self._cash_sell = 'Cash.Sell'
         self._spot_buy = 'Spot.Buy'
         self._spot_sell = 'Spot.Sell'
+
         # Column names of exchange rates
         self._ex_col_names = [self._cash_buy, self._cash_sell, self._spot_buy, self._spot_sell]
 
         # Descriptions of each currency
-        self._info_dict = {'USD': '0', 'HKD': '1', 'GBP': '2', 'AUD': '3', 'CAD': '4', 'SGD': '5', 'CHF': '6',
-                           'JPY': '7',
-                           'ZAR': '8', 'SEK': '9', 'NZD': '10', 'THB': '11', 'PHP': '12', 'IDR': '13', 'EUR': '14',
-                           'KRW': '15', 'VND': '16', 'MYR': '17', 'CNY': '18'}
+        self._info_dict = {'USD': 'US Dollar', 'HKD': 'Hong Kong Dollar', 'GBP': 'British Pound',
+                           'AUD': 'Australian Dollar', 'CAD': 'Canadian Dollar', 'SGD': 'Singapore Dollar',
+                           'CHF': 'Swiss Franc', 'JPY': 'Japanese Yen', 'ZAR': 'South African Rand',
+                           'SEK': 'Swedish Krona', 'NZD': 'New Zealand Dollar', 'THB': 'Thai Baht',
+                           'PHP': 'Philippine Peso', 'IDR': 'Indonesian Rupiah', 'EUR': 'Euro',
+                           'KRW': 'Korean Won', 'VND': 'Vietnam Dong', 'MYR': 'Malaysian Ringgit', 'CNY': 'China Yuan'}
 
         # Load csv file as data-frame
         self._df = pandas.read_csv(file_, index_col=False,
@@ -80,6 +85,7 @@ class _SimpleConverter(_CurrencyTable):
     Do computational works.
     Only handle foreign currency to/from base currency exchange
     """
+
     def __init__(self, file_):
         _CurrencyTable.__init__(self, file_)
 
@@ -126,6 +132,7 @@ class _SimpleConverter(_CurrencyTable):
 
 class CurrencyConverter(_SimpleConverter):
     """ Main converter """
+
     def __init__(self, file_):
         _SimpleConverter.__init__(self, file_)
 
@@ -178,23 +185,37 @@ class CurrencyConverter(_SimpleConverter):
         # If all the conditions have met, then do the exchange job
         if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid]) is True:
             if from_cur == self._base:
-                print(self._from_base(value, to_cur, to_type))
+                result = self._from_base(value, to_cur, to_type)
             elif to_cur == self._base:
-                print(self._to_base(value, from_cur, from_type))
+                result = self._to_base(value, from_cur, from_type)
             else:
                 mid_result = self._to_base(value, from_cur, from_type)
-                print(self._from_base(mid_result, to_cur, to_type))
+                result = self._from_base(mid_result, to_cur, to_type)
+
+            # Print exchange result
+            if result is not None:
+                print_format = {"value": value,
+                                "from_cur": from_cur,
+                                "from_type": from_type,
+                                "result": result,
+                                "to_cur": to_cur,
+                                "to_type": to_type}
+                print("[RESULT] {f[value]} {f[from_cur]}({f[from_type]}) = *{f[result]}* {f[to_cur]}({f[to_type]})"
+                      .format(f=print_format))
 
 
 if __name__ == '__main__':
     """ TEST COMMANDS """
     file = 'ExchangeRate@201805301602.csv'
     cvt = CurrencyConverter(file)
-    # print(cvt.get_cash_buy('HKD'))
-    # cvt.list_currencies()
-    # cvt.convert(1, 'NTD', 'a', 'NTD', 'spot')
-    # cvt.convert(323, 'NTD', 'cash', 'VND', 'spot')
+
+    print(cvt.get_cash_buy('HKD'))
+    print(cvt.get_spot_sell('USD'))
+    cvt.show_rates('VND', 'EUR')
+    cvt.convert(1, 'NTD', 'a', 'NTD', 'spot')
+    cvt.convert(2, 'EUR', 'cash', 'fe', 'se')
+    cvt.convert(323, 'NTD', 'cash', 'VND', 'spot')
     cvt.convert(323, 'ZAR', 'cash', 'VND', 'spot')
-    # cvt.show_currency_table()
-    # print(cvt.get_spot_sell('USD'))
-    # cvt.show_rates('VND')
+    cvt.convert(333, 'USD', 'cash', 'JPY', 'spot')
+    cvt.show_currency_table()
+    cvt.list_currencies()
