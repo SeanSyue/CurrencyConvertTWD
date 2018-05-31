@@ -1,12 +1,12 @@
 import pandas
 import numpy as np
-import sys
-
-# sys.tracebacklimit=0  # Suppress traceback
-sys.stderr = object  # Suppress error message
 
 
 class _CurrencyTable:
+    """
+    Basic currency table loader.
+    Including functions for inspecting available currencies, currency rates and exchange type
+    """
     def __init__(self, file_):
         self._base = 'NTD'
         self._cash = 'cash'
@@ -15,13 +15,16 @@ class _CurrencyTable:
         self._cash_sell = 'Cash.Sell'
         self._spot_buy = 'Spot.Buy'
         self._spot_sell = 'Spot.Sell'
+        # Column names of exchange rates
         self._ex_col_names = [self._cash_buy, self._cash_sell, self._spot_buy, self._spot_sell]
 
+        # Descriptions of each currency
         self._info_dict = {'USD': '0', 'HKD': '1', 'GBP': '2', 'AUD': '3', 'CAD': '4', 'SGD': '5', 'CHF': '6',
                            'JPY': '7',
                            'ZAR': '8', 'SEK': '9', 'NZD': '10', 'THB': '11', 'PHP': '12', 'IDR': '13', 'EUR': '14',
                            'KRW': '15', 'VND': '16', 'MYR': '17', 'CNY': '18'}
 
+        # Load csv file as data-frame
         self._df = pandas.read_csv(file_, index_col=False,
                                    usecols=['Currency', 'Cash', 'Spot', 'Cash.1', 'Spot.1']) \
             .replace({'0': np.nan, 0: np.nan}) \
@@ -30,33 +33,53 @@ class _CurrencyTable:
             .set_index(['Currency'])
         self._df['Description'] = self._df.index.map(self._info_dict)
 
+        # Available currencies for exchange
         self._cur_list = [cur_name for cur_name in self._df.index.values] + [self._base]
+        # Available exchange types
         self._ex_types = {self._cash, self._spot}
 
     def get_cash_buy(self, cur):
+        """ Get one single currency rate """
         return self._df.loc[cur, self._cash_buy]
 
     def get_cash_sell(self, cur):
+        """ Get one single currency rate """
         return self._df.loc[cur, self._cash_sell]
 
     def get_spot_buy(self, cur):
+        """ Get one single currency rate """
         return self._df.loc[cur, self._spot_buy]
 
     def get_spot_sell(self, cur):
+        """ Get one single currency rate """
         return self._df.loc[cur, self._spot_sell]
 
     def show_rates(self, *cur):
+        """
+        Print exchange rates between given currency to/from base currency.
+        Can handle multiple currency query
+        """
         print(self._df.reindex(cur).loc[:, self._ex_col_names])
 
     def list_currencies(self):
+        """ Print available currencies """
         print(self._df.loc[:, ['Description']])
         print("base: {}".format(self._base))
 
     def show_currency_table(self):
+        """ Print the whole data-frame """
         print(self._df)
+
+    def show_ex_types(self):
+        """ Print available exchange type """
+        print(self._ex_types)
 
 
 class _SimpleConverter(_CurrencyTable):
+    """
+    Do computational works.
+    Only handle foreign currency to/from base currency exchange
+    """
     def __init__(self, file_):
         _CurrencyTable.__init__(self, file_)
 
@@ -68,8 +91,7 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value * rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by cash is not available yet!".format(cur, self._base))
-            raise
+            print("[ERROR] {} to {} conversion by CASH is not available yet!".format(cur, self._base))
 
     def _from_base_cash(self, cur, value):
         try:
@@ -79,8 +101,7 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value / rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by cash is not available yet!".format(self._base, cur))
-            raise
+            print("[ERROR] {} to {} conversion by CASH is not available yet!".format(self._base, cur))
 
     def _to_base_spot(self, cur, value):
         try:
@@ -90,8 +111,7 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value * rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by spot is not available yet!".format(cur, self._base))
-            raise
+            print("[ERROR] {} to {} conversion by SPOT is not available yet!".format(cur, self._base))
 
     def _from_base_spot(self, cur, value):
         try:
@@ -101,11 +121,11 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value / rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by spot is not available yet!".format(self._base, cur))
-            raise
+            print("[ERROR] {} to {} conversion by SPOT is not available yet!".format(self._base, cur))
 
 
 class CurrencyConverter(_SimpleConverter):
+    """ Main converter """
     def __init__(self, file_):
         _SimpleConverter.__init__(self, file_)
 
@@ -122,30 +142,59 @@ class CurrencyConverter(_SimpleConverter):
             return self._from_base_spot(to_cur, value)
 
     def convert(self, value, from_cur, from_type, to_cur, to_type):
-        if from_type not in self._ex_types or to_type not in self._ex_types:
-            print("[ERROR] Irregular exchange type!")
-        elif from_cur not in self._cur_list or to_cur not in self._cur_list:
-            print("[ERROR] Unsupported currency!")
-        elif from_cur == to_cur and from_type == to_type:
-            print("[INFO] Identical currency no need for exchange")
-        elif from_cur == to_cur == 'NTD':
-            print("[NTD-T0-NTD] ARE YOU KIDDING ME?")
+        """ 
+        Check for input regularity, then handle top-level currency exchange query
+        Conditions to verify: 
+            1. are source and destination currencies are both base currencies?
+            2. are input currencies identical?
+            3. are input exchange types available? 
+            4. are input currencies available? 
+        """
+        # Initialize flags that check whether conditions have met
+        is_not_ntd = is_not_identical = is_type_valid = is_currency_valid = True
 
-        elif from_cur == self._base:
-            print(self._from_base(value, to_cur, to_type))
-        elif to_cur == self._base:
-            print(self._to_base(value, from_cur, from_type))
-        else:
-            mid_result = self._to_base(value, from_cur, from_type)
-            print(self._from_base(mid_result, to_cur, to_type))
+        # Check if source and destination currencies are both base currencies
+        if from_cur == to_cur == 'NTD':
+            is_not_ntd = False
+            print("[WHAT?] NTD TO NTD?")
+
+        # Check if input currencies identical
+        if from_cur == to_cur and from_type == to_type:
+            is_not_identical = False
+            print("[INFO] Identical currency no need for exchange")
+
+        # Check if input exchange types available
+        if not (from_type in self._ex_types) and (to_type in self._ex_types):
+            is_type_valid = False
+            print("[ERROR] Irregular exchange type!\n"
+                  "        Use 'CurrencyConverter.list_currencies()' to check out available currency list.")
+
+        # Check if input currencies available
+        if from_cur not in self._cur_list or to_cur not in self._cur_list:
+            is_currency_valid = False
+            print("[ERROR] Unsupported currency!\n"
+                  "        Use 'CurrencyConverter.show_ex_types()' to check out available exchange types.")
+
+        # If all the conditions have met, then do the exchange job
+        if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid]) is True:
+            if from_cur == self._base:
+                print(self._from_base(value, to_cur, to_type))
+            elif to_cur == self._base:
+                print(self._to_base(value, from_cur, from_type))
+            else:
+                mid_result = self._to_base(value, from_cur, from_type)
+                print(self._from_base(mid_result, to_cur, to_type))
 
 
 if __name__ == '__main__':
+    """ TEST COMMANDS """
     file = 'ExchangeRate@201805301602.csv'
     cvt = CurrencyConverter(file)
     # print(cvt.get_cash_buy('HKD'))
     # cvt.list_currencies()
-    # cvt.convert(1, 'USD', 'spot', 'VND', 'spot')
+    # cvt.convert(1, 'NTD', 'a', 'NTD', 'spot')
+    # cvt.convert(323, 'NTD', 'cash', 'VND', 'spot')
+    cvt.convert(323, 'ZAR', 'cash', 'VND', 'spot')
     # cvt.show_currency_table()
     # print(cvt.get_spot_sell('USD'))
-    cvt.show_rates('VND')
+    # cvt.show_rates('VND')
