@@ -71,9 +71,9 @@ class _CurrencyTable:
         print(self._df.loc[:, ['Description']])
         print("base: {}".format(self._base))
 
-    def show_currency_table(self):
-        """ Print the whole data-frame """
-        print(self._df)
+    def show_all_rates(self):
+        """ Print all exchange rates """
+        print(self._df.loc[:, self._ex_col_names])
 
     def show_ex_types(self):
         """ Print available exchange type """
@@ -97,7 +97,7 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value * rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by CASH is not available yet!".format(cur, self._base))
+            print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(cur, self._base))
 
     def _from_base_cash(self, cur, value):
         try:
@@ -107,7 +107,7 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value / rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by CASH is not available yet!".format(self._base, cur))
+            print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(self._base, cur))
 
     def _to_base_spot(self, cur, value):
         try:
@@ -117,7 +117,7 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value * rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by SPOT is not available yet!".format(cur, self._base))
+            print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(cur, self._base))
 
     def _from_base_spot(self, cur, value):
         try:
@@ -127,7 +127,7 @@ class _SimpleConverter(_CurrencyTable):
             else:
                 return value / rate
         except TypeError:
-            print("[ERROR] {} to {} conversion by SPOT is not available yet!".format(self._base, cur))
+            print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(self._base, cur))
 
 
 class CurrencyConverter(_SimpleConverter):
@@ -163,24 +163,24 @@ class CurrencyConverter(_SimpleConverter):
         # Check if source and destination currencies are both base currencies
         if from_cur == to_cur == 'NTD':
             is_not_ntd = False
-            print("[WHAT?] NTD TO NTD?")
+            print("[WHAT?]  NTD TO NTD?")
 
         # Check if input currencies identical
         if from_cur == to_cur and from_type == to_type:
             is_not_identical = False
-            print("[INFO] Identical currency no need for exchange")
+            print("[INFO]   Identical currency no need for exchange")
 
         # Check if input exchange types available
         if not (from_type in self._ex_types) and (to_type in self._ex_types):
             is_type_valid = False
-            print("[ERROR] Irregular exchange type!\n"
-                  "        Use 'CurrencyConverter.list_currencies()' to check out available currency list.")
+            print("[ERROR]  Irregular exchange type!\n"
+                  "         Use 'CurrencyConverter.list_currencies()' to check out available currency list.")
 
         # Check if input currencies available
         if from_cur not in self._cur_list or to_cur not in self._cur_list:
             is_currency_valid = False
-            print("[ERROR] Unsupported currency!\n"
-                  "        Use 'CurrencyConverter.show_ex_types()' to check out available exchange types.")
+            print("[ERROR]  Unsupported currency!\n"
+                  "         Use 'CurrencyConverter.show_ex_types()' to check out available exchange types.")
 
         # If all the conditions have met, then do the exchange job
         if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid]) is True:
@@ -217,5 +217,5 @@ if __name__ == '__main__':
     cvt.convert(323, 'NTD', 'cash', 'VND', 'spot')
     cvt.convert(323, 'ZAR', 'cash', 'VND', 'spot')
     cvt.convert(333, 'USD', 'cash', 'JPY', 'spot')
-    cvt.show_currency_table()
+    cvt.show_all_rates()
     cvt.list_currencies()
