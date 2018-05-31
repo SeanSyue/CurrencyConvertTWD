@@ -163,7 +163,7 @@ class CurrencyConverter(_SimpleConverter):
         # Check if source and destination currencies are both base currencies
         if from_cur == to_cur == 'NTD':
             is_not_ntd = False
-            print("[WHAT?]  NTD TO NTD?")
+            print("[WHAT?]  NTD TO NTD IS NO NEED FOR EXCHANGE!")
 
         # Check if input currencies identical
         if from_cur == to_cur and from_type == to_type:
@@ -180,7 +180,7 @@ class CurrencyConverter(_SimpleConverter):
         if from_cur not in self._cur_list or to_cur not in self._cur_list:
             is_currency_valid = False
             print("[ERROR]  Unsupported currency!\n"
-                  "         Use 'CurrencyConverter.show_ex_types()' to check out available exchange types.")
+                  "         Supported exchange type are {{{0}, {1}}}".format(self._cash, self._spot))
 
         # If all the conditions have met, then do the exchange job
         if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid]) is True:
