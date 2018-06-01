@@ -34,6 +34,10 @@ class _CurrencyTable:
         self._df = None
         self._cur_list = None
 
+        # load data from csv file
+        # note that "self._df" and "self._cur_list" will be updated
+        self.load_data(self)
+
     def load_data(self, file_):
         # Load csv file as data-frame
         self._df = pandas.read_csv(file_, index_col=False,
