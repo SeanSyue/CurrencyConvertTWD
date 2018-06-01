@@ -94,44 +94,32 @@ class _SimpleConverter(_CurrencyTable):
         _CurrencyTable.__init__(self)
 
     def _to_base_cash(self, cur, value):
-        try:
-            rate = self.get_cash_buy(cur)
-            if np.isnan(rate) or rate is None:
-                raise TypeError
-            else:
-                return value * rate
-        except TypeError:
+        rate = self.get_cash_buy(cur)
+        if np.isnan(rate) or rate is None:
             print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(cur, self._base))
+        else:
+            return value * rate
 
     def _from_base_cash(self, cur, value):
-        try:
-            rate = self.get_cash_sell(cur)
-            if np.isnan(rate) or rate is None:
-                raise TypeError
-            else:
-                return value / rate
-        except TypeError:
+        rate = self.get_cash_sell(cur)
+        if np.isnan(rate) or rate is None:
             print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(self._base, cur))
+        else:
+            return value / rate
 
     def _to_base_spot(self, cur, value):
-        try:
-            rate = self.get_spot_buy(cur)
-            if np.isnan(rate) or rate is None:
-                raise TypeError
-            else:
-                return value * rate
-        except TypeError:
+        rate = self.get_spot_buy(cur)
+        if np.isnan(rate) or rate is None:
             print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(cur, self._base))
+        else:
+            return value * rate
 
     def _from_base_spot(self, cur, value):
-        try:
-            rate = self.get_spot_sell(cur)
-            if np.isnan(rate) or rate is None:
-                raise TypeError
-            else:
-                return value / rate
-        except TypeError:
+        rate = self.get_spot_sell(cur)
+        if np.isnan(rate) or rate is None:
             print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(self._base, cur))
+        else:
+            return value / rate
 
 
 class CurrencyConverter(_SimpleConverter):
