@@ -6,6 +6,7 @@ class _CurrencyTable:
     """
     Basic currency table loader.
     Including functions for inspecting available currencies, currency rates and exchange type
+    Should use "self.load_data" method first after initialization before using other commands!
     """
 
     def __init__(self):
@@ -34,11 +35,9 @@ class _CurrencyTable:
         self._df = None
         self._cur_list = None
 
-        # load data from csv file
-        # note that "self._df" and "self._cur_list" will be updated
-        self.load_data(self)
-
     def load_data(self, file_):
+        """ Used to initialize/update data-frame """
+
         # Load csv file as data-frame
         self._df = pandas.read_csv(file_, index_col=False,
                                    usecols=['Currency', 'Cash', 'Spot', 'Cash.1', 'Spot.1']) \
@@ -53,18 +52,26 @@ class _CurrencyTable:
 
     def get_cash_buy(self, cur):
         """ Get one single currency rate """
+        if cur not in self._cur_list:
+            print('[WARNING] Invalid currency detected')
         return self._df.loc[cur, self._cash_buy]
 
     def get_cash_sell(self, cur):
         """ Get one single currency rate """
+        if cur not in self._cur_list:
+            print('[WARNING] Invalid currency detected')
         return self._df.loc[cur, self._cash_sell]
 
     def get_spot_buy(self, cur):
         """ Get one single currency rate """
+        if cur not in self._cur_list:
+            print('[WARNING] Invalid currency detected')
         return self._df.loc[cur, self._spot_buy]
 
     def get_spot_sell(self, cur):
         """ Get one single currency rate """
+        if cur not in self._cur_list:
+            print('[WARNING] Invalid currency detected')
         return self._df.loc[cur, self._spot_sell]
 
     def show_rates(self, *cur):
@@ -73,6 +80,8 @@ class _CurrencyTable:
         Can handle multiple currency query
         """
         print(self._df.reindex(cur).loc[:, self._ex_col_names])
+        if set(cur).issubset(self._cur_list) is False:
+            print('[WARNING] Invalid currency detected')
 
     def list_currencies(self):
         """ Print available currencies """
@@ -147,21 +156,34 @@ class CurrencyConverter(_SimpleConverter):
     def convert(self, value, from_cur, from_type, to_cur, to_type):
         """ 
         Check for input regularity, then handle top-level currency exchange query
+        Checking is deployed to all the inputs, so multiple can be captured
         Conditions to verify: 
             1. are source and destination currencies are both base currencies?
             2. are input currencies identical?
             3. are input exchange types available? 
-            4. are input currencies available? 
+            4. are input currencies available?
+            5. is input value valid?
         """
         # Initialize flags that check whether conditions have met
-        is_not_ntd = is_not_identical = is_type_valid = is_currency_valid = True
+        is_value_valid = is_not_ntd = is_not_identical = is_type_valid = is_currency_valid = True
+
+        # Regularize inputs' case
+        from_cur = from_cur.upper()
+        to_cur = to_cur.upper()
+        from_type = from_type.lower()
+        to_type = to_type.lower()
+
+        # Check if input value valid
+        if isinstance(value, (int, float)) is False:
+            is_value_valid = False
+            print("[ERROR]  Irregular value!")
 
         # Check if source and destination currencies are both base currencies
         if from_cur == to_cur == 'NTD':
             is_not_ntd = False
             print("[WHAT?]  NTD TO NTD IS NO NEED FOR EXCHANGE!")
 
-        # Check if input currencies identical
+        # Check if input currencies and exchange types are identical
         if from_cur == to_cur and from_type == to_type:
             is_not_identical = False
             print("[INFO]   Identical currency no need for exchange")
@@ -179,7 +201,7 @@ class CurrencyConverter(_SimpleConverter):
                   "         Supported exchange type are {{{0}, {1}}}".format(self._cash, self._spot))
 
         # If all the conditions have met, then do the exchange job
-        if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid]) is True:
+        if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid, is_value_valid]) is True:
             if from_cur == self._base:
                 result = self._from_base(value, to_cur, to_type)
             elif to_cur == self._base:
@@ -209,6 +231,7 @@ if __name__ == '__main__':
     print(cvt.get_cash_buy('HKD'))
     print(cvt.get_spot_sell('USD'))
     cvt.show_rates('VND', 'EUR')
+    cvt.show_rates('fef', 'JPY')
     cvt.convert(1, 'NTD', 'a', 'NTD', 'spot')
     cvt.convert(2, 'EUR', 'cash', 'fe', 'se')
     cvt.convert(323, 'NTD', 'cash', 'VND', 'spot')
