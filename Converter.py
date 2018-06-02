@@ -36,6 +36,9 @@ class _CurrencyTable:
         self._cur_list = self._INFO_DICT.keys()
 
         self._df = None
+        
+        # Name of csv file loaded
+        self._filename = None
 
     def load_data(self, file_):
         """ Used to initialize/update data-frame """
@@ -48,6 +51,8 @@ class _CurrencyTable:
                                         "Cash.1": self._CASH_SELL, "Spot.1": self._SPOT_SELL}) \
             .set_index(['Currency'])
         self._df['Description'] = self._df.index.map(self._INFO_DICT)
+        
+        self._filename = file_
 
     def get_cash_buy(self, cur):
         """ Get one single currency rate """
