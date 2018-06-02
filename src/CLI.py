@@ -5,15 +5,19 @@ from TableManager import download_csv, search_newest_file
 
 
 def update(instance_, file_):
-    print("[INFO] Checking for table...")
+    print("[INFO] finding for table...")
     download_csv()
     print("[INFO] Loading data...")
     instance_.load_data(file_)
     print("[INFO] Done")
 
 
-def listing(instance_, args_):
-    print("List!")
+def info(instance_):
+    instance_.show_currency_descriptions()
+
+
+def lookup(instance_, args_):
+    print("lookup!")
     if args_.currencies is not None:
         instance_.show_rates(*args_.currencies)
     else:
@@ -36,19 +40,22 @@ def run_cli(instance, file):
     )
 
     subparsers = parser.add_subparsers(
-        help='operation to be performed. update to update, list to list, convert to convert')
+        help='operation to be performed. update to update, lookup to lookup, convert to convert')
 
     update_parser = subparsers.add_parser('update')
     update_parser.set_defaults(which='update')
 
-    list_parser = subparsers.add_parser('list')
-    list_parser.set_defaults(which='list')
-    list_parser.add_argument('--currencies', '-c',
-                             type=str,
-                             action='store',
-                             nargs='+',
-                             help='list parser currencies'
-                             )
+    lookup_parser = subparsers.add_parser('lookup')
+    lookup_parser.set_defaults(which='lookup')
+    lookup_parser.add_argument('--currencies', '-c',
+                               type=str,
+                               action='store',
+                               nargs='+',
+                               help='lookup parser currencies'
+                               )
+
+    info_parser = subparsers.add_parser('info')
+    info_parser.set_defaults(which='info')
 
     convert_parser = subparsers.add_parser('convert')
     convert_parser.set_defaults(which='convert')
@@ -90,8 +97,10 @@ def run_cli(instance, file):
 
     if args.which == 'update':
         update(instance, file)
-    elif args.which == 'list':
-        listing(instance, args)
+    elif args.which == 'info':
+        info(instance)
+    elif args.which == 'lookup':
+        lookup(instance, args)
     elif args.which == 'convert':
         convert(instance, args)
 
