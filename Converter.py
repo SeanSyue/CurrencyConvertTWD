@@ -11,29 +11,31 @@ class _CurrencyTable:
 
     def __init__(self):
         # Some meta constants
-        self._base = 'NTD'
-        self._cash = 'cash'
-        self._spot = 'spot'
-        self._cash_buy = 'Cash.Buy'
-        self._cash_sell = 'Cash.Sell'
-        self._spot_buy = 'Spot.Buy'
-        self._spot_sell = 'Spot.Sell'
+        self._BASE = 'NTD'
+        self._CASH = 'cash'
+        self._SPOT = 'spot'
+        self._CASH_BUY = 'Cash.Buy'
+        self._CASH_SELL = 'Cash.Sell'
+        self._SPOT_BUY = 'Spot.Buy'
+        self._SPOT_SELL = 'Spot.Sell'
 
         # Column names of exchange rates
-        self._ex_col_names = [self._cash_buy, self._cash_sell, self._spot_buy, self._spot_sell]
+        self._ex_col_names = [self._CASH_BUY, self._CASH_SELL, self._SPOT_BUY, self._SPOT_SELL]
         # Available exchange types
-        self._ex_types = {self._cash, self._spot}
+        self._ex_types = {self._CASH, self._SPOT}
 
         # Descriptions of each currency
-        self._info_dict = {'USD': 'US Dollar', 'HKD': 'Hong Kong Dollar', 'GBP': 'British Pound',
+        self._INFO_DICT = {'USD': 'US Dollar', 'HKD': 'Hong Kong Dollar', 'GBP': 'British Pound',
                            'AUD': 'Australian Dollar', 'CAD': 'Canadian Dollar', 'SGD': 'Singapore Dollar',
                            'CHF': 'Swiss Franc', 'JPY': 'Japanese Yen', 'ZAR': 'South African Rand',
                            'SEK': 'Swedish Krona', 'NZD': 'New Zealand Dollar', 'THB': 'Thai Baht',
                            'PHP': 'Philippine Peso', 'IDR': 'Indonesian Rupiah', 'EUR': 'Euro',
                            'KRW': 'Korean Won', 'VND': 'Vietnam Dong', 'MYR': 'Malaysian Ringgit', 'CNY': 'China Yuan'}
 
+        # Available currencies for exchange
+        self._cur_list = self._INFO_DICT.keys()
+
         self._df = None
-        self._cur_list = None
 
     def load_data(self, file_):
         """ Used to initialize/update data-frame """
@@ -42,37 +44,34 @@ class _CurrencyTable:
         self._df = pandas.read_csv(file_, index_col=False,
                                    usecols=['Currency', 'Cash', 'Spot', 'Cash.1', 'Spot.1']) \
             .replace({'0': np.nan, 0: np.nan}) \
-            .rename(index=str, columns={"Cash": self._cash_buy, "Spot": self._spot_buy,
-                                        "Cash.1": self._cash_sell, "Spot.1": self._spot_sell}) \
+            .rename(index=str, columns={"Cash": self._CASH_BUY, "Spot": self._SPOT_BUY,
+                                        "Cash.1": self._CASH_SELL, "Spot.1": self._SPOT_SELL}) \
             .set_index(['Currency'])
-        self._df['Description'] = self._df.index.map(self._info_dict)
-
-        # Available currencies for exchange
-        self._cur_list = [cur_name for cur_name in self._df.index.values] + [self._base]
+        self._df['Description'] = self._df.index.map(self._INFO_DICT)
 
     def get_cash_buy(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
             print('[WARNING] Invalid currency detected')
-        return self._df.loc[cur, self._cash_buy]
+        return self._df.loc[cur, self._CASH_BUY]
 
     def get_cash_sell(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
             print('[WARNING] Invalid currency detected')
-        return self._df.loc[cur, self._cash_sell]
+        return self._df.loc[cur, self._CASH_SELL]
 
     def get_spot_buy(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
             print('[WARNING] Invalid currency detected')
-        return self._df.loc[cur, self._spot_buy]
+        return self._df.loc[cur, self._SPOT_BUY]
 
     def get_spot_sell(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
             print('[WARNING] Invalid currency detected')
-        return self._df.loc[cur, self._spot_sell]
+        return self._df.loc[cur, self._SPOT_SELL]
 
     def show_rates(self, *cur):
         """
@@ -86,7 +85,7 @@ class _CurrencyTable:
     def list_currencies(self):
         """ Print available currencies """
         print(self._df.loc[:, ['Description']])
-        print("base: {}".format(self._base))
+        print("base: {}".format(self._BASE))
 
     def show_all_rates(self):
         """ Print all exchange rates """
@@ -109,28 +108,28 @@ class _SimpleConverter(_CurrencyTable):
     def _to_base_cash(self, cur, value):
         rate = self.get_cash_buy(cur)
         if np.isnan(rate) or rate is None:
-            print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(cur, self._base))
+            print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(cur, self._BASE))
         else:
             return value * rate
 
     def _from_base_cash(self, cur, value):
         rate = self.get_cash_sell(cur)
         if np.isnan(rate) or rate is None:
-            print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(self._base, cur))
+            print("[OOPS]   {} to {} conversion by CASH is not available yet!".format(self._BASE, cur))
         else:
             return value / rate
 
     def _to_base_spot(self, cur, value):
         rate = self.get_spot_buy(cur)
         if np.isnan(rate) or rate is None:
-            print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(cur, self._base))
+            print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(cur, self._BASE))
         else:
             return value * rate
 
     def _from_base_spot(self, cur, value):
         rate = self.get_spot_sell(cur)
         if np.isnan(rate) or rate is None:
-            print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(self._base, cur))
+            print("[OOPS]   {} to {} conversion by SPOT is not available yet!".format(self._BASE, cur))
         else:
             return value / rate
 
@@ -142,15 +141,15 @@ class CurrencyConverter(_SimpleConverter):
         _SimpleConverter.__init__(self)
 
     def _to_base(self, value, from_cur, from_type):
-        if from_type == self._cash:
+        if from_type == self._CASH:
             return self._to_base_cash(from_cur, value)
-        elif from_type == self._spot:
+        elif from_type == self._SPOT:
             return self._to_base_spot(from_cur, value)
 
     def _from_base(self, value, to_cur, to_type):
-        if to_type == self._cash:
+        if to_type == self._CASH:
             return self._from_base_cash(to_cur, value)
-        elif to_type == self._spot:
+        elif to_type == self._SPOT:
             return self._from_base_spot(to_cur, value)
 
     def convert(self, value, from_cur, from_type, to_cur, to_type):
@@ -198,13 +197,13 @@ class CurrencyConverter(_SimpleConverter):
         if from_cur not in self._cur_list or to_cur not in self._cur_list:
             is_currency_valid = False
             print("[ERROR]  Unsupported currency!\n"
-                  "         Supported exchange type are {{{0}, {1}}}".format(self._cash, self._spot))
+                  "         Supported exchange type are {{{0}, {1}}}".format(self._CASH, self._SPOT))
 
         # If all the conditions have met, then do the exchange job
         if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid, is_value_valid]) is True:
-            if from_cur == self._base:
+            if from_cur == self._BASE:
                 result = self._from_base(value, to_cur, to_type)
-            elif to_cur == self._base:
+            elif to_cur == self._BASE:
                 result = self._to_base(value, from_cur, from_type)
             else:
                 mid_result = self._to_base(value, from_cur, from_type)
@@ -224,7 +223,7 @@ class CurrencyConverter(_SimpleConverter):
 
 if __name__ == '__main__':
     """ TEST COMMANDS """
-    file = 'ExchangeRate@201805301602.csv'
+    file = 'exchange-rate-tables/ExchangeRate@201806011602.csv'
     cvt = CurrencyConverter()
     cvt.load_data(file)
 
