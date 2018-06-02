@@ -1,3 +1,4 @@
+import os
 import argparse
 from Converter import CurrencyConverter
 
@@ -66,7 +67,8 @@ def run_cli(instance, file):
 
 
 if __name__ == '__main__':
-    csv_file = 'ExchangeRate@201805301602.csv'
+    rates_table_path = 'exchange-rate-tables'
+    csv_file = os.path.join(rates_table_path, 'ExchangeRate@201806011602.csv')
     cvt = CurrencyConverter()
     cvt.load_data(csv_file)
 
