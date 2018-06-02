@@ -201,8 +201,7 @@ class CurrencyConverter(_SimpleConverter):
         # Check if input currencies available
         if from_cur not in self._cur_list or to_cur not in self._cur_list:
             is_currency_valid = False
-            print("[ERROR]  Unsupported currency!\n"
-                  "         Use 'CurrencyConverter.show_currency_descriptions()' to check out available currency list.")
+            print("[ERROR]  Unsupported currency!")
 
         # If all the conditions have met, then do the exchange job
         if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid, is_value_valid]) is True:
