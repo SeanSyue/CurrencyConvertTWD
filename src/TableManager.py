@@ -8,7 +8,7 @@ if not os.path.isdir(DOWNLOAD_FOLDER):
     os.makedirs(DOWNLOAD_FOLDER)
 
 
-def download_csv(folder=DOWNLOAD_FOLDER, url=URL):
+def csv_downloader(folder=DOWNLOAD_FOLDER, url=URL):
     # # If download folder is not existed, then create a new one
     # if not os.path.isdir(folder):
     #     os.makedirs(folder)
@@ -26,8 +26,7 @@ def download_csv(folder=DOWNLOAD_FOLDER, url=URL):
 
             # If file already up to date, then no need to download a new one, just return
             if file_name == search_newest_file(folder):
-                print("[INFO] Existing file already up to date")
-                return
+                print("[INFO] Existing file {} already up to date".format(file_name))
 
             # Download file if needed
             elif res.status_code == 200:
@@ -36,18 +35,31 @@ def download_csv(folder=DOWNLOAD_FOLDER, url=URL):
                     for chunk in res.iter_content(chunk_size=1024):
                         csv.write(chunk)
                 print("[INFO] Download completed")
+
+            # return newest file name
+            return file_name
+
         else:
             print("[ERROR] Post failed with status code: {}".format(post.status_code))
+            raise FileNotFoundError
 
 
 def search_newest_file(folder):
-    try:
-        return max(os.listdir(folder))
-    except ValueError:
-        return 'No file has found'
+    # Check if folder is empty
+    for _, _, files in os.walk(folder):
+        if not files:
+            return None
+        else:
+            return max(os.listdir(folder))
+
+    # try:
+    #     newest = max(os.listdir(folder))
+    # except ValueError:  # if no file is found
+    #     raise FileNotFoundError
+    # return newest
 
 
 if __name__ == '__main__':
     """ TEST COMMANDS """
-    download_csv()
+    csv_downloader()
     print(search_newest_file(DOWNLOAD_FOLDER))

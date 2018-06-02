@@ -1,18 +1,15 @@
 import os
 import argparse
-# import sys
 from src.Converter import CurrencyConverter
-from src.TableManager import download_csv, search_newest_file
+from src.TableManager import csv_downloader, search_newest_file
 
-# sys.path.insert(0, 'src')
-# TABLE_PATH = '../exchange-rate-tables'
+# The directory which currency exchange rate table is downloaded and stored
 TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tables'
-# sys.path.insert(0, 'TABLE_PATH')
 
 
 def update(instance_, file_):
     print("[INFO] finding for table...")
-    download_csv(folder=TABLE_PATH)
+    csv_downloader(folder=TABLE_PATH)
     print("[INFO] Loading data...")
     instance_.load_data(file_)
     print("[INFO] Done")
@@ -34,25 +31,35 @@ def convert(instance_, args_):
 
 
 def run_cli():
+    # For the first run, make the TABLE_PATH directory
     if not os.path.isdir(TABLE_PATH):
         os.makedirs(TABLE_PATH)
-    for _, _, files in os.walk(TABLE_PATH):
-        if not files:
-            download_csv(TABLE_PATH)
 
-    # specify currency exchange rate table filepath
-    rates_table_path = None
-    try:
-        rates_table_path = TABLE_PATH
-        csv_file = search_newest_file(rates_table_path)
-    except FileNotFoundError:
-        print("[ERROR] Can not find table path{}".format(rates_table_path))
-        raise
-    file = os.path.join(rates_table_path, csv_file)
+    # initialize csv file & path variables
+    table_dir = TABLE_PATH
+    csv_file = None
+
+    # if not csv file was found, download a new one
+    # if file has not unsuccessful downloaded, print error message, then quit program
+    for _, _, f in os.walk(TABLE_PATH):
+        if not f:
+            print("[INFO] Auto downloading currency exchange rate table file")
+            try:
+                csv_file = csv_downloader(TABLE_PATH)
+            except FileNotFoundError:
+                print("[ERROR] Can not find currency exchange table file in {}! "
+                      "Please check network connectivity, "
+                      "then rerun this program to auto download a new file".format(TABLE_PATH))
+                return
 
     # initiate CurrencyConverter object
+    file = os.path.join(table_dir, csv_file)
     instance = CurrencyConverter()
     instance.load_data(file)
+
+    # ----------------------------------------------------------------------------------------------
+    # The real CLI part begins
+    # ----------------------------------------------------------------------------------------------
 
     parser = argparse.ArgumentParser(prog='Currency-Converter',
                                      description='Tool for converting units',
@@ -128,27 +135,3 @@ def run_cli():
         lookup(instance, args)
     elif args.which == 'convert':
         convert(instance, args)
-
-# args = parser.parse_args('update'.split())
-# args.func(args)
-
-# parser.parse_args('update'.split())
-
-
-# if __name__ == '__main__':
-# # specify currency exchange rate table filepath
-# rates_table_path = None
-# try:
-#     rates_table_path = '../exchange-rate-tables'
-#     csv_file = search_newest_file(rates_table_path)
-# except FileNotFoundError:
-#     print("[ERROR] Can not find table path{}".format(rates_table_path))
-#     raise
-# table_filepath = os.path.join(rates_table_path, csv_file)
-#
-# # initiate CurrencyConverter object
-# cvt = CurrencyConverter()
-# cvt.load_data(table_filepath)
-
-# # run main function
-# run_cli(cvt, table_filepath)
