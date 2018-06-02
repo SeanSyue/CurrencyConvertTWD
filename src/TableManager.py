@@ -9,9 +9,6 @@ if not os.path.isdir(DOWNLOAD_FOLDER):
 
 
 def csv_downloader(folder=DOWNLOAD_FOLDER, url=URL):
-    # # If download folder is not existed, then create a new one
-    # if not os.path.isdir(folder):
-    #     os.makedirs(folder)
 
     with requests.Session() as session:
         print("[INFO] Fetching download site: {}".format(url))
@@ -51,12 +48,6 @@ def search_newest_file(folder):
             return None
         else:
             return max(os.listdir(folder))
-
-    # try:
-    #     newest = max(os.listdir(folder))
-    # except ValueError:  # if no file is found
-    #     raise FileNotFoundError
-    # return newest
 
 
 if __name__ == '__main__':
