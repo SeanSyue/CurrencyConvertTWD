@@ -3,7 +3,7 @@ import os
 import requests
 
 URL = 'http://rate.bot.com.tw/xrt/flcsv/0/day?Lang=en-US'
-DOWNLOAD_FOLDER = 'exchange-rate-tables'
+DOWNLOAD_FOLDER = '../exchange-rate-tables'
 
 
 def download_csv(folder=DOWNLOAD_FOLDER, url=URL):

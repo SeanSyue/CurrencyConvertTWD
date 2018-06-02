@@ -10,6 +10,9 @@ class _CurrencyTable:
     """
 
     def __init__(self):
+        # Name of csv file loaded
+        self.filename = None
+
         # Some meta constants
         self._BASE = 'NTD'
         self._CASH = 'cash'
@@ -33,12 +36,9 @@ class _CurrencyTable:
                            'KRW': 'Korean Won', 'VND': 'Vietnam Dong', 'MYR': 'Malaysian Ringgit', 'CNY': 'China Yuan'}
 
         # Available currencies for exchange
-        self._cur_list = self._INFO_DICT.keys()
+        self._cur_list = list(self._INFO_DICT.keys())+[self._BASE]
 
         self._df = None
-        
-        # Name of csv file loaded
-        self._filename = None
 
     def load_data(self, file_):
         """ Used to initialize/update data-frame """
@@ -51,8 +51,8 @@ class _CurrencyTable:
                                         "Cash.1": self._CASH_SELL, "Spot.1": self._SPOT_SELL}) \
             .set_index(['Currency'])
         self._df['Description'] = self._df.index.map(self._INFO_DICT)
-        
-        self._filename = file_
+
+        self.filename = file_
 
     def get_cash_buy(self, cur):
         """ Get one single currency rate """
@@ -87,7 +87,7 @@ class _CurrencyTable:
         if set(cur).issubset(self._cur_list) is False:
             print('[WARNING] Invalid currency detected')
 
-    def list_currencies(self):
+    def show_currency_descriptions(self):
         """ Print available currencies """
         print(self._df.loc[:, ['Description']])
         print("base: {}".format(self._BASE))
@@ -196,13 +196,13 @@ class CurrencyConverter(_SimpleConverter):
         if not (from_type in self._ex_types) and (to_type in self._ex_types):
             is_type_valid = False
             print("[ERROR]  Irregular exchange type!\n"
-                  "         Use 'CurrencyConverter.list_currencies()' to check out available currency list.")
+                  "         Supported exchange type are {{{0}, {1}}}.format(self._CASH, self._SPOT)")
 
         # Check if input currencies available
         if from_cur not in self._cur_list or to_cur not in self._cur_list:
             is_currency_valid = False
             print("[ERROR]  Unsupported currency!\n"
-                  "         Supported exchange type are {{{0}, {1}}}".format(self._CASH, self._SPOT))
+                  "         Use 'CurrencyConverter.show_currency_descriptions()' to check out available currency list.")
 
         # If all the conditions have met, then do the exchange job
         if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid, is_value_valid]) is True:
@@ -228,7 +228,7 @@ class CurrencyConverter(_SimpleConverter):
 
 if __name__ == '__main__':
     """ TEST COMMANDS """
-    file = 'exchange-rate-tables/ExchangeRate@201806011602.csv'
+    file = '../exchange-rate-tables/ExchangeRate@201806011602.csv'
     cvt = CurrencyConverter()
     cvt.load_data(file)
 
@@ -241,5 +241,6 @@ if __name__ == '__main__':
     cvt.convert(323, 'NTD', 'cash', 'VND', 'spot')
     cvt.convert(323, 'ZAR', 'cash', 'VND', 'spot')
     cvt.convert(333, 'USD', 'cash', 'JPY', 'spot')
+    cvt.convert(333, 'USD', 'cash', 'NTD', 'spot')
     cvt.show_all_rates()
-    cvt.list_currencies()
+    cvt.show_currency_descriptions()
