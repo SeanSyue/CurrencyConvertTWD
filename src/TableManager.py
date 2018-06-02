@@ -4,13 +4,14 @@ import requests
 
 URL = 'http://rate.bot.com.tw/xrt/flcsv/0/day?Lang=en-US'
 DOWNLOAD_FOLDER = '../exchange-rate-tables'
+if not os.path.isdir(DOWNLOAD_FOLDER):
+    os.makedirs(DOWNLOAD_FOLDER)
 
 
 def download_csv(folder=DOWNLOAD_FOLDER, url=URL):
-
-    # If download folder is not existed, then create a new one
-    if not os.path.isdir(folder):
-        os.makedirs(folder)
+    # # If download folder is not existed, then create a new one
+    # if not os.path.isdir(folder):
+    #     os.makedirs(folder)
 
     with requests.Session() as session:
         print("[INFO] Fetching download site: {}".format(url))
@@ -40,7 +41,10 @@ def download_csv(folder=DOWNLOAD_FOLDER, url=URL):
 
 
 def search_newest_file(folder):
-    return max(os.listdir(folder))
+    try:
+        return max(os.listdir(folder))
+    except ValueError:
+        return 'No file has found'
 
 
 if __name__ == '__main__':
