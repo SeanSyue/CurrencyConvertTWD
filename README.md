@@ -1,6 +1,9 @@
 # CurrencyConvertTWD
 Currency converter based on [Bank of Taiwan](http://rate.bot.com.tw/xrt?Lang=en-US) 
 
+## UPDATE: Please change to the `newer-branch` after clone this repo
+`git checkout newer-branch`
+
 ## Installation
 1. clone this repo: https://github.com/SeanSyue/CurrencyConvertTWD
 2. change work directory to this project 
