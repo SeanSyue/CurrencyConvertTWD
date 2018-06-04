@@ -3,19 +3,16 @@ import os
 import requests
 
 URL = 'http://rate.bot.com.tw/xrt/flcsv/0/day?Lang=en-US'
-DOWNLOAD_FOLDER = '../exchange-rate-tables'
-# if not os.path.isdir(DOWNLOAD_FOLDER):
-#     os.makedirs(DOWNLOAD_FOLDER)
 
 
-def csv_finder(folder=DOWNLOAD_FOLDER):
+def csv_finder(folder):
     """
     Get newest exchange rate table file
     If no file exist in folder, then download a new one
     """
     for _, _, f in os.walk(folder):
         if f:
-            return search_newest_file(folder)
+            return get_newest_file(folder)
 
         if not f:
             print("[INFO] Auto downloading currency exchange rate table file")
@@ -29,7 +26,7 @@ def csv_finder(folder=DOWNLOAD_FOLDER):
                 raise
 
 
-def csv_downloader(folder=DOWNLOAD_FOLDER, url=URL):
+def csv_downloader(folder, url=URL):
     """
     Download latest exchange rate table and return the file name
     Note: this function don't check if newest file exist
@@ -46,7 +43,7 @@ def csv_downloader(folder=DOWNLOAD_FOLDER, url=URL):
             file_name = re.search(r'"(.*?)"', content).group(1)
 
             # # If file already up to date, then no need to download a new one
-            # if file_name == search_newest_file(folder):
+            # if file_name == get_newest_file(folder):
             #     print("[INFO] Existing file {} already up to date".format(file_name))
 
             # Download file if needed
@@ -66,11 +63,11 @@ def csv_downloader(folder=DOWNLOAD_FOLDER, url=URL):
             raise FileNotFoundError
 
 
-def search_newest_file(folder):
+def get_newest_file(folder):
     return max(os.listdir(folder))
 
 
 if __name__ == '__main__':
     """ TEST COMMANDS """
-    csv_downloader()
-    print(search_newest_file(DOWNLOAD_FOLDER))
+    # csv_downloader()
+    # print(get_newest_file(DOWNLOAD_FOLDER))
