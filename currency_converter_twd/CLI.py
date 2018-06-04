@@ -1,7 +1,7 @@
 import os
 import argparse
-from src.Converter import CurrencyConverter
-from src.TableManager import csv_downloader, search_newest_file
+from currency_converter_twd.Converter import CurrencyConverter
+from currency_converter_twd.TableManager import csv_downloader, search_newest_file
 
 # The directory which currency exchange rate table is downloaded and stored
 TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tables'
