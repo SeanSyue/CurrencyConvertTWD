@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='currency-converter-twd',
+    name='convert-twd',
     version='0.1.0',
     entry_points={
         'console_scripts': ['cvtwd=currency_converter_twd.CLI:run_cli'],
