@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='cvt',
+    name='currency-converter-twd',
     version='0.1.0',
     entry_points={
-        'console_scripts': ['cvt=currency_converter_twd.CLI:run_cli'],
+        'console_scripts': ['cvtwd=currency_converter_twd.CLI:run_cli'],
     },
     description='Command line tool for currency converter',
     classifiers=[
