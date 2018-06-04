@@ -1,7 +1,7 @@
 import os
 import argparse
 from currency_converter_twd.Converter import CurrencyConverter
-from currency_converter_twd.TableManager import csv_downloader, csv_finder
+from currency_converter_twd.TableManager import csv_downloader, search_newest_file
 
 # The directory which currency exchange rate table is downloaded and stored
 TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tables'
@@ -9,8 +9,8 @@ TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tabl
 
 def update(instance_, file_):
     print("[INFO] finding for table...")
-    file_name = csv_downloader(folder=TABLE_PATH)
-    print("[INFO] Downloaded file {}. Loading data...".format(file_name))
+    csv_downloader(folder=TABLE_PATH)
+    print("[INFO] Loading data...")
     instance_.load_data(file_)
     print("[INFO] Done")
 
@@ -37,16 +37,11 @@ def run_cli():
 
     # initialize csv file & path variables
     table_dir = TABLE_PATH
+    csv_file = csv_downloader(TABLE_PATH)
 
     # if not csv file was found, download a new one
     # if file has not unsuccessful downloaded, print error message, then quit program
-    try:
-        csv_file = csv_finder(TABLE_PATH)
-    except FileNotFoundError:
-        print("[ERROR] Can not find currency exchange table file in {}! "
-              "Please check network connectivity, "
-              "then rerun this program to auto download a new file".format(TABLE_PATH))
-        return
+
 
     # initiate CurrencyConverter object
     file = os.path.join(table_dir, csv_file)
