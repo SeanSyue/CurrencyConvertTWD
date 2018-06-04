@@ -35,9 +35,6 @@ def run_cli():
     if not os.path.isdir(TABLE_PATH):
         os.makedirs(TABLE_PATH)
 
-    # initialize csv file & path variables
-    table_dir = TABLE_PATH
-
     # if not csv file was found, download a new one
     # if file has not unsuccessful downloaded, print error message, then quit program
     try:
@@ -49,7 +46,7 @@ def run_cli():
         return
 
     # initiate CurrencyConverter object
-    file = os.path.join(table_dir, csv_file)
+    file = os.path.join(TABLE_PATH, csv_file)
     instance = CurrencyConverter()
     instance.load_data(file)
 

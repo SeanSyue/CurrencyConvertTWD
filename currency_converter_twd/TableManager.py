@@ -4,8 +4,8 @@ import requests
 
 URL = 'http://rate.bot.com.tw/xrt/flcsv/0/day?Lang=en-US'
 DOWNLOAD_FOLDER = '../exchange-rate-tables'
-if not os.path.isdir(DOWNLOAD_FOLDER):
-    os.makedirs(DOWNLOAD_FOLDER)
+# if not os.path.isdir(DOWNLOAD_FOLDER):
+#     os.makedirs(DOWNLOAD_FOLDER)
 
 
 def csv_finder(folder=DOWNLOAD_FOLDER):
