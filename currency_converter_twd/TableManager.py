@@ -67,7 +67,7 @@ def csv_downloader(folder=DOWNLOAD_FOLDER, url=URL):
 
 
 def search_newest_file(folder):
-    max(os.listdir(folder))
+    return max(os.listdir(folder))
 
 
 if __name__ == '__main__':
