@@ -1,10 +1,33 @@
+"""
+Reminder: check for some print-out statements in Converter.py
+"""
 import os
 import argparse
+import textwrap
 from currency_converter_twd.Converter import CurrencyConverter
 from currency_converter_twd.TableManager import csv_downloader, csv_finder
 
+AAA = """
+　　　　　┏┓　　　┏┓
+　　　　┏┛┻━━━┻┗┓
+　　　　┃　　　　　　　┃
+　　　　┃　　　━　　　┃
+　　　　┃　┳┛　┗┳　┃
+　　　　┃　　　　　　　┃
+　　　　┃　　　┻　　　┃
+　　　　┗━┓　新　┏━┛
+　　　　　　┃　东　┃
+　　┏━━━┛　方　┃
+　┏┫　　　　　神　┃
+　┗┓　***　兽　┃
+　　┗┓┏┳━┓┏┏┛
+　　　┣┣┃　┣┣┃
+　　　┗┻┛　┗┻┛
+"""
+
 # The directory which currency exchange rate table is downloaded and stored
 TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tables'
+# TABLE_PATH = os.path.join(os.environ['HOME'], '.exchange-rate-tables')
 
 
 def update(instance_, file_):
@@ -55,17 +78,20 @@ def run_cli():
     # ----------------------------------------------------------------------------------------------
 
     parser = argparse.ArgumentParser(prog='Currency-Converter',
-                                     description='Tool for converting units',
-                                     epilog='Well, this one should displayed at the end')
+                                     description=textwrap.dedent('Exchange rate lookup and convert\n'
+                                                                 'Base: NTD'),
+                                     epilog=textwrap.dedent('Well, this one should displayed at the end'),
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         '-v', '--version',
         dest='version',
         action='version',
-        version='%(prog)s ** version: 0.1 **'
+        version='%(prog)s ** version: 0.1.0 **'
     )
 
     subparsers = parser.add_subparsers(
-        help='operation to be performed. update to update, lookup to lookup, convert to convert', dest='which')
+        help='Available operations: ** update -- lookup -- info -- convert **',
+        dest='which')
 
     update_parser = subparsers.add_parser('update')
     update_parser.set_defaults(which='update')
@@ -101,14 +127,14 @@ def run_cli():
                                 choices={'cash', 'spot', 'Cash', 'Spot', 'CASH', 'SPOT'},
                                 nargs='?',
                                 default='cash',
-                                help='from which type to convert')
+                                help='from which type to convert, (default: %(default)s)')
     convert_parser.add_argument('to_cur',
                                 metavar='TO_CURRENCY',
                                 action='store',
                                 type=str,
                                 nargs='?',
                                 default='NTD',
-                                help='to which currency to convert')
+                                help='to which currency to convert, (default: %(default)s)')
     convert_parser.add_argument('to_type',
                                 metavar='TO_TYPE',
                                 action='store',
@@ -116,7 +142,7 @@ def run_cli():
                                 choices={'cash', 'spot', 'Cash', 'Spot', 'CASH', 'SPOT'},
                                 nargs='?',
                                 default='cash',
-                                help='to which type to convert')
+                                help='to which type to convert, (default: %(default)s)')
 
     args = parser.parse_args()
 

@@ -1,3 +1,7 @@
+"""
+Some statements should be consistent with CLI.py.
+Check for them by searching 'This one should be consistent with the command CLI.py'
+"""
 import pandas
 import numpy as np
 
@@ -57,25 +61,33 @@ class _CurrencyTable:
     def get_cash_buy(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
-            print('[WARNING] Invalid currency detected')
+            # This one should be consistent with the command CLI.py
+            print("[WARNING] Invalid currency detected\n"
+                  "Use 'cvtwd info' or 'cvtwd lookup' to check for available currencies")
         return self._df.loc[cur, self._CASH_BUY]
 
     def get_cash_sell(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
-            print('[WARNING] Invalid currency detected')
+            # This one should be consistent with the command CLI.py
+            print("[WARNING] Invalid currency detected\n"
+                  "Use 'cvtwd info' or 'cvtwd lookup' to check for available currencies")
         return self._df.loc[cur, self._CASH_SELL]
 
     def get_spot_buy(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
-            print('[WARNING] Invalid currency detected')
+            # This one should be consistent with the command CLI.py
+            print("[WARNING] Invalid currency detected\n"
+                  "Use 'cvtwd info' or 'cvtwd lookup' to check for available currencies")
         return self._df.loc[cur, self._SPOT_BUY]
 
     def get_spot_sell(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
-            print('[WARNING] Invalid currency detected')
+            # This one should be consistent with the command CLI.py
+            print("[WARNING] Invalid currency detected\n"
+                  "Use 'cvtwd info' or 'cvtwd lookup' to check for available currencies")
         return self._df.loc[cur, self._SPOT_SELL]
 
     def show_rates(self, *cur):
@@ -201,7 +213,9 @@ class CurrencyConverter(_SimpleConverter):
         # Check if input currencies available
         if from_cur not in self._cur_list or to_cur not in self._cur_list:
             is_currency_valid = False
-            print("[ERROR]  Unsupported currency!")
+            # This one should be consistent with the command CLI.py
+            print("[ERROR]  Unsupported currency!\n"
+                  "Use 'cvtwd info' or 'cvtwd lookup' to check for available currencies")
 
         # If all the conditions have met, then do the exchange job
         if all([is_not_ntd, is_not_identical, is_type_valid, is_currency_valid, is_value_valid]) is True:
