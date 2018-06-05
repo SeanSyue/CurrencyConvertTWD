@@ -38,7 +38,12 @@ def update(instance_, file_):
 
 
 def info(instance_):
-    instance_.show_currency_descriptions()
+    print("==============================\n"
+          "AVAILABLE EXCHANGE TYPE:\n"
+          "{}\n"
+          "==============================\n"
+          "CURRENCIES DESCRIPTION:\n"
+          "{}".format(instance_.show_ex_types(), instance_.show_currency_descriptions()))
 
 
 def lookup(instance_, args_):
@@ -92,10 +97,10 @@ def run_cli():
         help='Available operations:'
              'update:  Download latest exchange rate table'
              'lookup:  look up all available exchange rates'
-                      'parse "-c" for specific currency(ies)'
+             'parse "-c" for specific currency(ies)'
              'info:    check currency names and descriptions'
              'convert: convert operation.'
-                      'use "-h" to see detail',
+             'use "-h" to see detail',
         dest='which')
 
     update_parser = subparsers.add_parser('update')
