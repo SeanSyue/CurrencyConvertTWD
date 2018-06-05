@@ -8,26 +8,25 @@ from currency_converter_twd.Converter import CurrencyConverter
 from currency_converter_twd.TableManager import csv_downloader, csv_finder
 
 AAA = """
-　　　　　┏┓　　　┏┓
-　　　　┏┛┻━━━┻┗┓
-　　　　┃　　　　　　　┃
-　　　　┃　　　━　　　┃
-　　　　┃　┳┛　┗┳　┃
-　　　　┃　　　　　　　┃
-　　　　┃　　　┻　　　┃
-　　　　┗━┓　新　┏━┛
-　　　　　　┃　东　┃
-　　┏━━━┛　方　┃
-　┏┫　　　　　神　┃
-　┗┓　***　兽　┃
-　　┗┓┏┳━┓┏┏┛
-　　　┣┣┃　┣┣┃
-　　　┗┻┛　┗┻┛
+　　　　　||　　 ||
+　　　　/-||-----||-\\
+　　　　|　　BUG驅散  |
+　　　　|　　　 　　　 |
+　　　　|　  0　 0　  |
+　　　　|　　　　　　　|
+　　　　|　　 -|-　　 |
+　　　　\___　 　____/
+　　　　　|　　 神|
+　　____/ 　 獸  |
+　 /　　　　保　　/
+==|　***佑　　  /
+　 \_|||__|||_/
+　　　|||　|||
+　　　|||　|||
 """
 
 # The directory which currency exchange rate table is downloaded and stored
 TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tables'
-# TABLE_PATH = os.path.join(os.environ['HOME'], '.exchange-rate-tables')
 
 
 def update(instance_, file_):
@@ -80,7 +79,7 @@ def run_cli():
     parser = argparse.ArgumentParser(prog='Currency-Converter',
                                      description=textwrap.dedent('Exchange rate lookup and convert\n'
                                                                  'Base: NTD'),
-                                     epilog=textwrap.dedent('Well, this one should displayed at the end'),
+                                     epilog=textwrap.dedent(AAA),
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         '-v', '--version',
