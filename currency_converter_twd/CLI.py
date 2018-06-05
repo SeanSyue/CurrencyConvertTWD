@@ -8,25 +8,25 @@ from currency_converter_twd.Converter import CurrencyConverter
 from currency_converter_twd.TableManager import csv_downloader, csv_finder
 
 AAA = """
-　　　　　||　　 ||
-　　　　/-||-----||-\\
-　　　　|　　BUG驅散  |
-　　　　|　　　 　　　 |
+　　　　 　||　　 ||
+　　　　/--||-----||--\
+　　　　|　 BUG驅散   |
+　　　　|　　　 　　  |
 　　　　|　  0　 0　  |
-　　　　|　　　　　　　|
+　　　　|　　　　　 　|
 　　　　|　　 -|-　　 |
 　　　　\___　 　____/
 　　　　　|　　 神|
-　　____/ 　 獸  |
-　 /　　　　保　　/
+　　____/ 　 獸   /
+　 /　　　　保 　/
 ==|　***佑　　  /
-　 \_|||__|||_/
+　 \__|||__|||_/
 　　　|||　|||
 　　　|||　|||
 """
 
 # The directory which currency exchange rate table is downloaded and stored
-TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tables'
+TABLE_PATH = '/home/pi/WORKSPACE/CurrencyConvertTWD/exchange-rate-tables'
 
 
 def update(instance_, file_):
@@ -89,7 +89,13 @@ def run_cli():
     )
 
     subparsers = parser.add_subparsers(
-        help='Available operations: ** update -- lookup -- info -- convert **',
+        help='Available operations:'
+             'update:  Download latest exchange rate table'
+             'lookup:  look up all available exchange rates'
+                      'parse "-c" for specific currency(ies)'
+             'info:    check currency names and descriptions'
+             'convert: convert operation.'
+                      'use "-h" to see detail',
         dest='which')
 
     update_parser = subparsers.add_parser('update')
@@ -101,7 +107,7 @@ def run_cli():
                                type=str,
                                action='store',
                                nargs='+',
-                               help='lookup parser currencies',
+                               help='lookup exchange rates',
                                )
 
     info_parser = subparsers.add_parser('info')
@@ -113,7 +119,7 @@ def run_cli():
                                 metavar='VALUE',
                                 action='store',
                                 type=float,
-                                help='input value to convert')
+                                help='main converter')
     convert_parser.add_argument('from_cur',
                                 metavar='FROM_CURRENCY',
                                 action='store',
