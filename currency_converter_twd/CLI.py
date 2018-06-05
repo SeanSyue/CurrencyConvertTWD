@@ -39,11 +39,12 @@ def update(instance_, file_):
 
 def info(instance_):
     print("==============================\n"
-          "AVAILABLE EXCHANGE TYPE:\n"
-          "{}\n"
-          "==============================\n"
-          "CURRENCIES DESCRIPTION:\n"
-          "{}".format(instance_.show_ex_types(), instance_.show_currency_descriptions()))
+          "AVAILABLE EXCHANGE TYPE:\n")
+    instance_.show_ex_types()
+    print("==============================\n"
+          "CURRENCIES DESCRIPTION:\n")
+    instance_.show_currency_descriptions()
+    print("==============================")
 
 
 def lookup(instance_, args_):
