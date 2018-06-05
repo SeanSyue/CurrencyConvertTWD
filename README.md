@@ -1,7 +1,8 @@
 # CurrencyConvertTWD
-Currency converter based on [Bank of Taiwan](http://rate.bot.com.tw/xrt?Lang=en-US) 
+Look up currency exchange rates and calculate currency exchange values.
+Currency rates based on [Bank of Taiwan].(http://rate.bot.com.tw/xrt?Lang=en-US) 
 
-## UPDATE: Please change to the `newer-branch` after clone this repo
+## UPDATE: Please change to the [`newer-branch`](https://github.com/SeanSyue/CurrencyConvertTWD/tree/newer-branch) after clone this repo
 `git checkout newer-branch`
 
 ## Installation
