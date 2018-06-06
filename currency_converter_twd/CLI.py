@@ -1,25 +1,33 @@
+"""
+Reminder: check for some print-out statements in Converter.py
+"""
 import os
 import argparse
-# import sys
-from src.Converter import CurrencyConverter
-from src.TableManager import download_csv, search_newest_file
+import textwrap
+from currency_converter_twd.Converter import CurrencyConverter
+from currency_converter_twd.TableManager import csv_downloader, csv_finder
 
-# sys.path.insert(0, 'src')
-# TABLE_PATH = '../exchange-rate-tables'
-TABLE_PATH = 'D:/WORKSPACE/PycharmProjects/CurrencyConvertTWD/exchange-rate-tables'
-# sys.path.insert(0, 'TABLE_PATH')
+
+# The directory which currency exchange rate table is downloaded and stored
+TABLE_PATH = '/home/pi/WORKSPACE/CurrencyConvertTWD/exchange-rate-tables'
 
 
 def update(instance_, file_):
     print("[INFO] finding for table...")
-    download_csv(folder=TABLE_PATH)
-    print("[INFO] Loading data...")
+    file_name = csv_downloader(folder=TABLE_PATH)
+    print("[INFO] Downloaded file {}. Loading data...".format(file_name))
     instance_.load_data(file_)
     print("[INFO] Done")
 
 
 def info(instance_):
+    print("==============================\n"
+          "AVAILABLE EXCHANGE TYPE:")
+    instance_.show_ex_types()
+    print("==============================\n"
+          "CURRENCIES DESCRIPTION:\n")
     instance_.show_currency_descriptions()
+    print("==============================")
 
 
 def lookup(instance_, args_):
@@ -34,38 +42,47 @@ def convert(instance_, args_):
 
 
 def run_cli():
+    # For the first run, make the TABLE_PATH directory
     if not os.path.isdir(TABLE_PATH):
         os.makedirs(TABLE_PATH)
-    for _, _, files in os.walk(TABLE_PATH):
-        if not files:
-            download_csv(TABLE_PATH)
 
-    # specify currency exchange rate table filepath
-    rates_table_path = None
+    # if not csv file was found, download a new one
+    # if file has not unsuccessful downloaded, print error message, then quit program
     try:
-        rates_table_path = TABLE_PATH
-        csv_file = search_newest_file(rates_table_path)
+        csv_file = csv_finder(TABLE_PATH)
     except FileNotFoundError:
-        print("[ERROR] Can not find table path{}".format(rates_table_path))
-        raise
-    file = os.path.join(rates_table_path, csv_file)
+        print("[ERROR] Can not find currency exchange table file in {}! "
+              "Please check network connectivity, "
+              "then rerun this program to auto download a new file".format(TABLE_PATH))
+        return
 
     # initiate CurrencyConverter object
+    file = os.path.join(TABLE_PATH, csv_file)
     instance = CurrencyConverter()
     instance.load_data(file)
 
+    # ----------------------------------------------------------------------------------------------
+    # The real CLI part begins
+    # ----------------------------------------------------------------------------------------------
+
     parser = argparse.ArgumentParser(prog='Currency-Converter',
-                                     description='Tool for converting units',
-                                     epilog='Well, this one should displayed at the end')
+                                     description=textwrap.dedent('Exchange rate lookup and convert\n'
+                                                                 'Base: NTD'),
+                                     epilog=textwrap.dedent('Free edition presented by Yu-Chen Xue on June, 2018'),
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         '-v', '--version',
         dest='version',
         action='version',
-        version='%(prog)s ** version: 0.1 **'
+        version='%(prog)s ** version: 0.1.0 **'
     )
 
     subparsers = parser.add_subparsers(
-        help='operation to be performed. update to update, lookup to lookup, convert to convert', dest='which')
+        help='@update:  Download latest exchange rate table\n'
+             '@lookup:  look up all available exchange rates. Parse "-c" for specific currency(ies)\n'
+             '@info:    check exchange types and currencies description\n'
+             '@convert: convert operation. Use "-h" to see detail',
+        dest='which')
 
     update_parser = subparsers.add_parser('update')
     update_parser.set_defaults(which='update')
@@ -76,7 +93,7 @@ def run_cli():
                                type=str,
                                action='store',
                                nargs='+',
-                               help='lookup parser currencies',
+                               help='lookup exchange rates',
                                )
 
     info_parser = subparsers.add_parser('info')
@@ -88,7 +105,7 @@ def run_cli():
                                 metavar='VALUE',
                                 action='store',
                                 type=float,
-                                help='input value to convert')
+                                help='main converter')
     convert_parser.add_argument('from_cur',
                                 metavar='FROM_CURRENCY',
                                 action='store',
@@ -101,14 +118,14 @@ def run_cli():
                                 choices={'cash', 'spot', 'Cash', 'Spot', 'CASH', 'SPOT'},
                                 nargs='?',
                                 default='cash',
-                                help='from which type to convert')
+                                help='from which type to convert, (default: %(default)s)')
     convert_parser.add_argument('to_cur',
                                 metavar='TO_CURRENCY',
                                 action='store',
                                 type=str,
                                 nargs='?',
                                 default='NTD',
-                                help='to which currency to convert')
+                                help='to which currency to convert, (default: %(default)s)')
     convert_parser.add_argument('to_type',
                                 metavar='TO_TYPE',
                                 action='store',
@@ -116,7 +133,7 @@ def run_cli():
                                 choices={'cash', 'spot', 'Cash', 'Spot', 'CASH', 'SPOT'},
                                 nargs='?',
                                 default='cash',
-                                help='to which type to convert')
+                                help='to which type to convert, (default: %(default)s)')
 
     args = parser.parse_args()
 
@@ -128,27 +145,3 @@ def run_cli():
         lookup(instance, args)
     elif args.which == 'convert':
         convert(instance, args)
-
-# args = parser.parse_args('update'.split())
-# args.func(args)
-
-# parser.parse_args('update'.split())
-
-
-# if __name__ == '__main__':
-# # specify currency exchange rate table filepath
-# rates_table_path = None
-# try:
-#     rates_table_path = '../exchange-rate-tables'
-#     csv_file = search_newest_file(rates_table_path)
-# except FileNotFoundError:
-#     print("[ERROR] Can not find table path{}".format(rates_table_path))
-#     raise
-# table_filepath = os.path.join(rates_table_path, csv_file)
-#
-# # initiate CurrencyConverter object
-# cvt = CurrencyConverter()
-# cvt.load_data(table_filepath)
-
-# # run main function
-# run_cli(cvt, table_filepath)
