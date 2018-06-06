@@ -1,6 +1,6 @@
 # CurrencyConvertTWD
 Look up currency exchange rates and calculate currency exchange values.
-Currency rates based on [Bank of Taiwan].(http://rate.bot.com.tw/xrt?Lang=en-US)
+Currency rates based on [Bank of Taiwan](http://rate.bot.com.tw/xrt?Lang=en-US).
 
 ## Installation
 1. clone this repo: https://github.com/SeanSyue/CurrencyConvertTWD
