@@ -7,23 +7,6 @@ import textwrap
 from currency_converter_twd.Converter import CurrencyConverter
 from currency_converter_twd.TableManager import csv_downloader, csv_finder
 
-AAA = """
-　　　　 　||　　 ||
-　　　　/--||-----||--\
-　　　　|　 BUG驅散   |
-　　　　|　　　 　　  |
-　　　　|　  0　 0　  |
-　　　　|　　　　　 　|
-　　　　|　　 -|-　　 |
-　　　　\___　 　____/
-　　　　　|　　 神|
-　　____/ 　 獸   /
-　 /　　　　保 　/
-==|　***佑　　  /
-　 \__|||__|||_/
-　　　|||　|||
-　　　|||　|||
-"""
 
 # The directory which currency exchange rate table is downloaded and stored
 TABLE_PATH = '/home/pi/WORKSPACE/CurrencyConvertTWD/exchange-rate-tables'
@@ -85,7 +68,7 @@ def run_cli():
     parser = argparse.ArgumentParser(prog='Currency-Converter',
                                      description=textwrap.dedent('Exchange rate lookup and convert\n'
                                                                  'Base: NTD'),
-                                     epilog=textwrap.dedent(AAA),
+                                     epilog=textwrap.dedent('Free edition presented by Yu-Chen Xue on June, 2018'),
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         '-v', '--version',
@@ -95,13 +78,11 @@ def run_cli():
     )
 
     subparsers = parser.add_subparsers(
-        help='Available operations:\n'
-             'update:  Download latest exchange rate table\n'
-             'lookup:  look up all available exchange rates\n'
-             'parse "-c" for specific currency(ies)\n'
-             'info:    check exchange types and currencies description\n'
-             'convert: convert operation.'
-             'use "-h" to see detail',
+        help='@update:  Download latest exchange rate table\n'
+             '@lookup:  look up all available exchange rates\n'
+             '@parse "-c" for specific currency(ies)\n'
+             '@info:    check exchange types and currencies description\n'
+             '@convert: convert operation. Use "-h" to see detail',
         dest='which')
 
     update_parser = subparsers.add_parser('update')
