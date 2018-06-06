@@ -10,4 +10,4 @@ Currency rates based on [Bank of Taiwan].(http://rate.bot.com.tw/xrt?Lang=en-US)
 5. run in command line `pip install .`
 
 ## Example
-Examples can be found in [Example_commands.ipynb]
+Examples can be found in [Example_commands.ipynb](https://github.com/SeanSyue/CurrencyConvertTWD/blob/master/Example_commands.ipynb).
