@@ -79,8 +79,7 @@ def run_cli():
 
     subparsers = parser.add_subparsers(
         help='@update:  Download latest exchange rate table\n'
-             '@lookup:  look up all available exchange rates\n'
-             '@parse "-c" for specific currency(ies)\n'
+             '@lookup:  look up all available exchange rates. Parse "-c" for specific currency(ies)\n'
              '@info:    check exchange types and currencies description\n'
              '@convert: convert operation. Use "-h" to see detail',
         dest='which')
