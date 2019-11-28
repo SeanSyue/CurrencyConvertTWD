@@ -10,7 +10,7 @@ Currency rates based on [Bank of Taiwan](http://rate.bot.com.tw/xrt?Lang=en-US).
 Examples can be found in [Example_commands.ipynb](https://github.com/SeanSyue/CurrencyConvertTWD/blob/master/Example_commands.ipynb).
 
 # TODO
-- [ ] Retrieve the timestamp of the lastest table 
+- [X] Retrieve the timestamp of the lastest table 
 - [ ] Clean up previous tables after updating
 - [ ] Unit & intergrated testing
 - [ ] Logging

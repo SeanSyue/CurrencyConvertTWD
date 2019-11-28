@@ -58,6 +58,10 @@ class _CurrencyTable:
 
         self.filename = file_
 
+    def parse_table_timestamp(self): 
+        if self.filename is not None:
+            return
+
     def get_cash_buy(self, cur):
         """ Get one single currency rate """
         if cur not in self._cur_list:
