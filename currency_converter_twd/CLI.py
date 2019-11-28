@@ -2,6 +2,7 @@
 Reminder: check for some print-out statements in Converter.py
 """
 import os
+import re
 import argparse
 import textwrap
 from currency_converter_twd.Converter import CurrencyConverter
@@ -18,6 +19,19 @@ def update(instance_, file_):
     print("[INFO] Downloaded file {}. Loading data...".format(file_name))
     instance_.load_data(file_)
     print("[INFO] Done")
+
+
+def timestamp(instance_, file_):
+    try:
+        csv_file = csv_finder(TABLE_PATH)
+        time_stamp = file_name = re.search(r'ExchangeRate@(.*?)\.csv', csv_file).group(1)
+
+        print("Last update: {}".format(time_stamp))
+    except FileNotFoundError:
+        print("[ERROR] Can not find currency exchange table file in {}! "
+              "Please run `cvtwd update` to download a currency table"
+              "or please check your network connection".format(TABLE_PATH))
+        return
 
 
 def info(instance_):
@@ -79,6 +93,7 @@ def run_cli():
 
     subparsers = parser.add_subparsers(
         help='@update:  Download latest exchange rate table\n'
+             '@timestamp: check the timestamp of the latest currency table\n'
              '@lookup:  look up all available exchange rates. Parse "-c" for specific currency(ies)\n'
              '@info:    check exchange types and currencies description\n'
              '@convert: convert operation. Use "-h" to see detail',
@@ -86,6 +101,9 @@ def run_cli():
 
     update_parser = subparsers.add_parser('update')
     update_parser.set_defaults(which='update')
+
+    timestamp_parser = subparsers.add_parser('timestamp')
+    timestamp_parser.set_defaults(which='timestamp')
 
     lookup_parser = subparsers.add_parser('lookup')
     lookup_parser.set_defaults(which='lookup')
@@ -139,6 +157,8 @@ def run_cli():
 
     if args.which == 'update':
         update(instance, file)
+    elif args.which == 'timestamp':
+        timestamp(instance, file)
     elif args.which == 'info':
         info(instance)
     elif args.which == 'lookup':
