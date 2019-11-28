@@ -3,6 +3,7 @@ Reminder: check for some print-out statements in Converter.py
 """
 import os
 import re
+import datetime
 import argparse
 import textwrap
 from currency_converter_twd.Converter import CurrencyConverter
@@ -25,8 +26,11 @@ def timestamp(instance_, file_):
     try:
         csv_file = csv_finder(TABLE_PATH)
         time_stamp = file_name = re.search(r'ExchangeRate@(.*?)\.csv', csv_file).group(1)
+        time_stamp_raw = datetime.datetime.strptime(time_stamp,'%Y%m%d%H%M')
+        time_stamp = time_stamp_raw.strftime('%Y-%m-%d %H:%M')
 
-        print("Last update: {}".format(time_stamp))
+        print("== Last update ==\n"
+              "{}".format(time_stamp))
     except FileNotFoundError:
         print("[ERROR] Can not find currency exchange table file in {}! "
               "Please run `cvtwd update` to download a currency table"
