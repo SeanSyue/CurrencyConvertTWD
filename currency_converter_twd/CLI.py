@@ -22,10 +22,10 @@ def update(instance_, file_):
     print("[INFO] Done")
 
 
-def timestamp(instance_, file_):
+def timestamp(instance_):
     try:
         csv_file = csv_finder(TABLE_PATH)
-        time_stamp = file_name = re.search(r'ExchangeRate@(.*?)\.csv', csv_file).group(1)
+        time_stamp = re.search(r'ExchangeRate@(.*?)\.csv', csv_file).group(1)
         time_stamp_raw = datetime.datetime.strptime(time_stamp,'%Y%m%d%H%M')
         time_stamp = time_stamp_raw.strftime('%Y-%m-%d %H:%M')
 
