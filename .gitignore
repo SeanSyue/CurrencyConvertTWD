@@ -7,5 +7,5 @@ build/*
 *egg*
 */__pycache__/*
 
-.idea/**/workspace.xml
+.idea
 .vscode
