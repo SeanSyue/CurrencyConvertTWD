@@ -1,8 +1,13 @@
 import re
 import os
+import configparser
 import requests
 
-URL = 'http://rate.bot.com.tw/xrt/flcsv/0/day?Lang=en-US'
+config_file = 'currency_converter_twd/config.ini'
+config = configparser.ConfigParser()
+config.read(config_file)
+
+URL = config['TABLE']['url']
 
 
 def csv_finder(folder):

@@ -4,14 +4,18 @@ Reminder: check for some print-out statements in Converter.py
 import os
 import re
 import datetime
+import configparser
 import argparse
 import textwrap
 from currency_converter_twd.Converter import CurrencyConverter
 from currency_converter_twd.TableManager import csv_downloader, csv_finder
 
+config_file = 'currency_converter_twd/config.ini'
+config = configparser.ConfigParser()
+config.read(config_file)
 
 # The directory which currency exchange rate table is downloaded and stored
-TABLE_PATH = os.path.join(os.path.dirname(__file__), 'exchange-rate-tables')
+TABLE_PATH = os.path.join(os.path.dirname(__file__), config['TABLE']['folder'])
 
 
 def update(instance_, file_):
@@ -92,7 +96,7 @@ def run_cli():
         '-v', '--version',
         dest='version',
         action='version',
-        version='%(prog)s ** version: 0.1.0 **'
+        version='%(prog)s ** version: {} **'.format(config['APP']['version'])
     )
 
     subparsers = parser.add_subparsers(
@@ -162,7 +166,7 @@ def run_cli():
     if args.which == 'update':
         update(instance, file)
     elif args.which == 'timestamp':
-        timestamp(instance, file)
+        timestamp(instance)
     elif args.which == 'info':
         info(instance)
     elif args.which == 'lookup':

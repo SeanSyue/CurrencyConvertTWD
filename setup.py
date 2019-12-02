@@ -1,8 +1,12 @@
+import configparser
 from setuptools import setup
+
+config = configparser.ConfigParser()
+config.read('currency_converter_twd/config.ini')
 
 setup(
     name='convert-twd',
-    version='0.2.0',
+    version=config['APP']['version'],
     entry_points={
         'console_scripts': ['cvtwd=currency_converter_twd.CLI:run_cli'],
     },
@@ -18,6 +22,6 @@ setup(
     author='Yu-Chen Xue',
     install_requires=[item.strip().replace('==', '>=') for item in open('./requirements.txt').readlines()],
     packages=['currency_converter_twd'],
-    package_data={'': ['*.csv']},
+    package_data={'': ['*.csv', '*.ini']},
     include_package_data=True,
 )
