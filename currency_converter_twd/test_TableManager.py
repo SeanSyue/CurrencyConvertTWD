@@ -42,6 +42,15 @@ class TestTableCaches(TestCase):
 class TestFileSystemManagerParent(TestCase):
     @contextmanager
     def _mock_tables_test(self, folder_, *tables_, mkdir_=True):
+        """
+        wrapper for setup and teardown
+        determine whether makes mocked folder or mocked tables individually
+        set "file system manager" instance for testing
+        remove folder generated during tearing down
+        @param folder_: mocked folder
+        @param tables_: mocked tables
+        @param mkdir_: whether makes mocked folder
+        """
         try:
             # TODO: log file making
             if mkdir_:  # make mock table folder
@@ -57,6 +66,13 @@ class TestFileSystemManagerParent(TestCase):
             shutil.rmtree(folder_)
 
     def _do_delete_assertion(self, folder_, expected_active_table_):
+        """
+        do delete outdated tables
+        check if table cache is set properly
+        check if intended files are cleaned
+        @param folder_: mocked folder
+        @param expected_active_table_: expected value for active table
+        """
         self.__sys_mgr.delete_outdated_tables()
         self.assertEqual(self.__sys_mgr.active_table, expected_active_table_)
         self.assertEqual(len(self.__sys_mgr.outdated_tables), 0)
@@ -68,22 +84,14 @@ class TestFileSystemManagerWithExistingTables(TestFileSystemManagerParent):
     __mock_tables = [f'ExchangeRate@201912021{i}00.csv' for i in range(3, 6)]
 
     def test_delete_outdated_tables(self):
-        """
-        test if tables can be deleted correctly
-        """
-        print(f"{self.__mock_tables = }")
         with self._mock_tables_test(self.__mock_table_folder, *self.__mock_tables):
-            # self._do_delete_assertion(self.__mock_table_folder, max(self.__mock_tables))
-            self._do_delete_assertion(self.__mock_table_folder, 'ExchangeRate@201912021500.csv')
+            self._do_delete_assertion(self.__mock_table_folder, max(self.__mock_tables))
 
 
 class TestFileSystemManagerWithEmptyFolder(TestFileSystemManagerParent):
     __mock_empty_table_folder = Path(__file__).parent.joinpath('empty-' + _FOLDER)
 
     def test_delete_outdated_tables(self):
-        """
-        test if tables can be deleted correctly
-        """
         with self._mock_tables_test(self.__mock_empty_table_folder):
             self._do_delete_assertion(self.__mock_empty_table_folder, '')
 
@@ -92,8 +100,5 @@ class TestFileSystemManagerWithNonExistedFolder(TestFileSystemManagerParent):
     __mock_non_existed_table_folder = Path(__file__).parent.joinpath('pseudo-' + _FOLDER)
 
     def test_delete_outdated_tables(self):
-        """
-        test if tables can be deleted correctly
-        """
         with self._mock_tables_test(self.__mock_non_existed_table_folder):
             self._do_delete_assertion(self.__mock_non_existed_table_folder, '')
