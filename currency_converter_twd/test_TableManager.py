@@ -56,7 +56,6 @@ class TestFileSystemManagerParent(TestCase):
             if mkdir_:  # make mock table folder
                 folder_.mkdir(exist_ok=True)
                 if tables_:  # generate mock tables
-                    print(f"{tables_ = }")
                     for file in tables_:
                         folder_.joinpath(file).touch()
             self.__sys_mgr = FileSystemManager(folder_)
@@ -74,11 +73,15 @@ class TestFileSystemManagerParent(TestCase):
         @param expected_active_table_: expected value for active table
         """
         self.__sys_mgr.delete_outdated_tables()
+        # check if table cache is set properly
         self.assertEqual(self.__sys_mgr.active_table, expected_active_table_)
         self.assertEqual(len(self.__sys_mgr.outdated_tables), 0)
-        remaining_tables = [n.name for n in Path(folder_).glob('*.csv')]
-        self.assertEqual(remaining_tables[0], expected_active_table_)
+
+        # check if only expected active table remain in the folder
+        indices = list(Path(folder_).glob('*.csv'))
+        remaining_tables = [n.name for n in Path(folder_).glob('*.csv')] if indices else ['']
         self.assertEqual(len(remaining_tables), 1)
+        self.assertEqual(remaining_tables[0], expected_active_table_)
 
 
 class TestFileSystemManagerWithExistingTables(TestFileSystemManagerParent):
