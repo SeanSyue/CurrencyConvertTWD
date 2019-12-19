@@ -231,3 +231,23 @@ class TestOnlineResourceManager(TestCase):
 
             # check if requests function was called correctly
             self.assertEqual(requests_mock.get.call_count, 1)
+
+
+class TestTableManager(TestCase):
+    def test_if_no_update(self):
+        """
+        test fetch update and if no update is detected
+        """
+        pass
+
+    def test_download_new(self):
+        """
+        test fetch update and download new currency table
+        """
+        pass
+
+    def test_download_new_with_cleanup(self):
+        """
+        test clean up
+        """
+        pass

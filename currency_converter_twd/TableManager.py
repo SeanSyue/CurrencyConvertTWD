@@ -232,22 +232,37 @@ class OnlineResourceManager:
 class TableManager:
 
     def __init__(self):
-        self.__sys_mgr = FileSystemManager(Path(__file__).parent.joinpath(_FOLDER))
+        self.__sys_mgr = FileSystemManager(Path(__file__).parent.joinpath(_FOLDER))  # init workspace
         self.__res_mgr = OnlineResourceManager()
 
-    def initialize(self):
-        # TODO: Check if table folder exists
-        # TODO: if not, `self.__sys_mgr.__initialize_table_folder(Path(__file__).parent)`
-        # TODO: populate `self.__sys_mgr.active_table`
-        # TODO: and `self.__sys_mgr.active_table`
-        # TODO: with existing table files
-        pass
+    def update(self, clear=False):
+        """
+        check for new currency table
+        if new update valid, download the new currency table
+        @param clear: If true, clean outdated table
+        @return: None
+        """
+        def __if_new(current_, new_):
+            """
+            @param current_: filename of current currency table
+            @param new_: filename of newly fetched currency table
+            @return: True if new currency table detected
+            """
+            # newer version has larger value in filename
+            return new_ > current_
+        
+        current_name = self.__sys_mgr.active_table
+        self.__res_mgr.fetch_latest_resource()
+        new_name = self.__res_mgr.resource_table_name
+        # TODO: log no new update
 
-    def update(self):
-        # TODO: check if new
-        # TODO: download
-        # TODO: renew self.active_table
-        pass
+        if __if_new(current_name, new_name):
+            # TODO: log new update & auto download
+            self.__res_mgr.download_table(self.__sys_mgr.table_folder)
+            self.__sys_mgr.active_table = new_name
+
+        if clear:
+            self.clean_up()
 
     def clean_up(self):
         self.__sys_mgr.delete_outdated_tables()
