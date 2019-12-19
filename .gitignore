@@ -1,5 +1,6 @@
 *.csv
 *.txt
+!currency_converter_twd/mock_table/**
 !requirements.txt
 
 dist/*

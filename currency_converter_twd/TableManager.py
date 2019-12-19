@@ -196,7 +196,8 @@ class OnlineResourceManager:
 
         # query for latest resources
         try:
-            self.__resource = requests.get(self.__url, stream=True)
+            # self.__resource = requests.get(self.__url, stream=True)
+            self.__resource = requests.get(self.__url)
         except Timeout:
             warnings.warn("Oops! timeout!")
         except RequestException as e:
@@ -218,8 +219,8 @@ class OnlineResourceManager:
 
         if self.__resource and self.__resource_table_name is not None:
             with p_destination.joinpath(self.__resource_table_name).open('wb') as csv:
-                for chunk in self.__resource.iter_content(chunk_size=1024):
-                    csv.write(chunk)
+                # for chunk in self.__resource.iter_content(chunk_size=1024):
+                csv.write(self.__resource.content)
                 # TODO: log complete
             # reset local variables
             self.__resource = None
