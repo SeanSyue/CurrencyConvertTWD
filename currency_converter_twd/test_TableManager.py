@@ -266,8 +266,6 @@ class TestTableManagerParent(TestCase):
         self.assertIsNone(self._tm.resource)
         self.assertIsNone(self._tm.resource_table_name)
 
-    # def _update_testing(self, res_mgr_mock_, expected_active_table_, expected_outdated_tables_):
-
     def __init__(self, context_, *args, **kwargs):
         """
         create text context for testing
@@ -327,6 +325,7 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         self._tm.update()
         new_tables = list(self.p_folder.glob('*.csv'))
         self.assertEqual(len(orig_tables), len(new_tables))
+        # TODO: check if `download_table` was not called
         self._common_checks(Path(_TEST_CSV_OLD_2).name, {Path(_TEST_CSV_OLD_1).name})
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
@@ -348,10 +347,28 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         self._tm.update()
         new_tables = list(self.p_folder.glob('*.csv'))
         self.assertEqual(len(orig_tables) + 1, len(new_tables))
+        # TODO: check if `download_table` was called once
         self._common_checks(mock_csv_name, {Path(_TEST_CSV_OLD_1).name, Path(_TEST_CSV_OLD_2).name})
 
-    def test_download_new_with_cleanup(self):
+    @patch('currency_converter_twd.TableManager.requests', autospec=True)
+    def test_download_new_with_cleanup(self, requests_mock):
         """
         test clean up
         """
-        pass
+        p_mock_csv = Path(_TEST_CSV_NEW)
+        mock_csv_name = p_mock_csv.name
+        mock_table_content = Common.read_mock_csv(p_mock_csv)
+
+        response_mock = Mock()
+        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
+        response_mock.return_value.content = mock_table_content
+
+        requests_mock.get.side_effect = response_mock
+
+        orig_tables = list(self.p_folder.glob('*.csv'))
+        self.assertEqual(len(self.mock_existing_tables), len(orig_tables))
+        self._tm.update(clear=True)
+        new_tables = list(self.p_folder.glob('*.csv'))
+        self.assertEqual(1, len(new_tables))
+        # TODO: check if `download_table` was called once
+        self._common_checks(mock_csv_name, set())
