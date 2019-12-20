@@ -312,11 +312,27 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         self.__test_context = self._mock_tables_test(*self.mock_existing_tables)
         super().__init__(self.__test_context, *args, **kwargs)
 
-    def test_init_with_tables_existing(self):
+    def __test_update(self, download_new=True, clear=False):
         """
-        test if internal parameters is set correctly if some tables already existed during the init phase
+        test the `update()` function on behalf of different test cases
+        @param download_new: test case for download new
+        @param clear: test case for clear after updating
         """
-        self._common_checks(Path(_TEST_CSV_OLD_2).name, {Path(_TEST_CSV_OLD_1).name})
+        orig_tables = list(self.p_folder.glob('*.csv'))
+        self.assertEqual(len(self.mock_existing_tables), len(orig_tables))  # check if correct file creation
+        self._tm.update(clear=clear)
+        new_tables = list(self.p_folder.glob('*.csv'))
+
+        # check for remaining file count in the workspace
+        # TODO: check file contents in the workspace
+        if download_new:
+            expected_file_count = len(orig_tables) + 1
+            if clear:
+                expected_file_count = 1
+        else:
+            expected_file_count = len(orig_tables)
+        self.assertEqual(expected_file_count, len(new_tables))
+        # TODO: check if `download_table` was called once
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
     def test_if_no_update(self, requests_mock):
@@ -326,11 +342,7 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
 
         requests_mock.get.side_effect = Common.make_response_mock(_TEST_CSV_OLD_2)
 
-        orig_tables = list(self.p_folder.glob('*.csv'))
-        self._tm.update()
-        new_tables = list(self.p_folder.glob('*.csv'))
-        self.assertEqual(len(orig_tables), len(new_tables))
-        # TODO: check if `download_table` was not called
+        self.__test_update(download_new=False)
         self._common_checks(Path(_TEST_CSV_OLD_2).name, {Path(_TEST_CSV_OLD_1).name})
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
@@ -343,11 +355,7 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
 
         requests_mock.get.side_effect = Common.make_response_mock(_TEST_CSV_NEW)
 
-        orig_tables = list(self.p_folder.glob('*.csv'))
-        self._tm.update()
-        new_tables = list(self.p_folder.glob('*.csv'))
-        self.assertEqual(len(orig_tables) + 1, len(new_tables))
-        # TODO: check if `download_table` was called once
+        self.__test_update()
         self._common_checks(mock_csv_name, {Path(_TEST_CSV_OLD_1).name, Path(_TEST_CSV_OLD_2).name})
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
@@ -360,10 +368,5 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
 
         requests_mock.get.side_effect = Common.make_response_mock(_TEST_CSV_NEW)
 
-        orig_tables = list(self.p_folder.glob('*.csv'))
-        self.assertEqual(len(self.mock_existing_tables), len(orig_tables))
-        self._tm.update(clear=True)
-        new_tables = list(self.p_folder.glob('*.csv'))
-        self.assertEqual(1, len(new_tables))
-        # TODO: check if `download_table` was called once
+        self.__test_update(clear=True)
         self._common_checks(mock_csv_name, set())
