@@ -16,7 +16,8 @@ config.read('currency_converter_twd/config.ini')
 # The directory which currency exchange rate table is downloaded and stored
 _FOLDER = config['TABLE']['folder']
 
-_TEST_CSV_FOLDER = 'mock_table'
+_TEST_CSV_OLD = 'currency_converter_twd/mock_tables/ExchangeRate@201912021600.csv'
+_TEST_CSV_NEW = 'currency_converter_twd/mock_tables/ExchangeRate@201912201451.csv'
 
 
 class TestTableCaches(TestCase):
@@ -165,19 +166,6 @@ class TestOnlineResourceManager(TestCase):
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
     def test_download_table(self, requests_mock):
-        def __find_mock_csv(root_):
-            """
-            find reference currency table csv file under given root
-            @return: path to the csv file found
-            """
-            p = Path(__file__).parent.joinpath(root_)
-            files = list(p.glob('*.csv'))
-
-            if len(files) != 0:
-                return files[0]
-            else:
-                raise FileNotFoundError(f"No currency table found under root: {p}")
-
         def __read_mock_csv(csv_: Path):
             """
             return the content of the reference csv file
@@ -201,9 +189,9 @@ class TestOnlineResourceManager(TestCase):
                 # TODO: log file deleting
                 shutil.rmtree(folder_)
 
-        mock_csv_location = __find_mock_csv(_TEST_CSV_FOLDER)
-        mock_table_content = __read_mock_csv(mock_csv_location)
-        mock_csv_name = mock_csv_location.name
+        p_mock_csv = Path(_TEST_CSV_OLD)
+        mock_table_content = __read_mock_csv(p_mock_csv)
+        mock_csv_name = Path(p_mock_csv).name
 
         response_mock = Mock()
         response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
@@ -224,7 +212,7 @@ class TestOnlineResourceManager(TestCase):
             # check if csv file really exists
             mock_downloaded_csv = mock_download_root.joinpath(mock_csv_name)
             # check if file content is correct
-            self.assertTrue(cmp(mock_downloaded_csv, mock_csv_location))
+            self.assertTrue(cmp(mock_downloaded_csv, p_mock_csv))
             # check if internal properties set correctly
             self.assertIsNone(self.__res_mgr.resource)
             self.assertIsNone(self.__res_mgr.resource_table_name)
