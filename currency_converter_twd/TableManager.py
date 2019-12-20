@@ -208,6 +208,13 @@ class OnlineResourceManager:
         # TODO: log requesting
         self.__resource, self.__resource_table_name = analyse_resource(self.__resource)
 
+    def clear_cache(self):
+        """
+        interface for clearing internal properties
+        """
+        self.__resource = None
+        self.__resource_table_name = None
+
     def download_table(self, destination_):
         """
         download a new table from the online resource
@@ -223,8 +230,7 @@ class OnlineResourceManager:
                 csv.write(self.__resource.content)
                 # TODO: log complete
             # reset local variables
-            self.__resource = None
-            self.__resource_table_name = None
+            self.clear_cache()
         else:
             raise ValueError("Should fetch latest resource first!")
 
@@ -252,6 +258,10 @@ class TableManager:
     def resource_table_name(self):
         return self.__res_mgr.resource_table_name
 
+    @property
+    def res_mgr(self):
+        return self.__res_mgr
+
     def update(self, clear=False):
         """
         check for new currency table
@@ -271,12 +281,14 @@ class TableManager:
         current_name = self.__sys_mgr.active_table
         self.__res_mgr.fetch_latest_resource()
         new_name = self.__res_mgr.resource_table_name
-        # TODO: log no new update
 
         if __if_new(current_name, new_name):
             # TODO: log new update & auto download
             self.__res_mgr.download_table(self.__sys_mgr.table_folder)
             self.__sys_mgr.active_table = new_name
+        else:
+            # TODO: log no new update
+            self.__res_mgr.clear_cache()
 
         if clear:
             self.clean_up()

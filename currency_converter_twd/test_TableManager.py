@@ -240,11 +240,12 @@ class TestTableManagerParent(TestCase):
                 src = str(Path(test_csv).resolve())
                 des = str(folder_.joinpath(Path(test_csv).name))
                 shutil.copy(src, des)
+
         try:
             # TODO: log file making
             self.p_folder.mkdir(exist_ok=True)
             __make_existed_tables(self.p_folder, *tables_)
-            self.__tm = TableManager()
+            self._tm = TableManager()
             yield
         finally:
             # TODO: log file deleting
@@ -254,11 +255,13 @@ class TestTableManagerParent(TestCase):
         # Check if table folder really exists
         self.assertTrue(self.p_folder.exists())
         # inspect internal parameters of the `FileSystemManager`
-        self.assertEqual(self.__tm.active_table, expected_active_table)
-        self.assertEqual(self.__tm.outdated_tables, expected_outdated_tables)
+        self.assertEqual(self._tm.active_table, expected_active_table)
+        self.assertEqual(self._tm.outdated_tables, expected_outdated_tables)
         # inspect internal parameters of the `OnlineResourceManager`
-        self.assertIsNone(self.__tm.resource)
-        self.assertIsNone(self.__tm.resource_table_name)
+        self.assertIsNone(self._tm.resource)
+        self.assertIsNone(self._tm.resource_table_name)
+
+    # def _update_testing(self, res_mgr_mock_, expected_active_table_, expected_outdated_tables_):
 
     def __init__(self, context_, *args, **kwargs):
         """
@@ -303,11 +306,23 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         """
         self._common_checks(Path(_TEST_CSV_OLD_2).name, {Path(_TEST_CSV_OLD_1).name})
 
-    def test_if_no_update(self):
+    @patch('currency_converter_twd.TableManager.requests', autospec=True)
+    def test_if_no_update(self, requests_mock):
         """
         test fetch update and if no update is detected
         """
-        pass
+        mock_csv_name = Path(_TEST_CSV_OLD_2).name
+
+        response_mock = Mock()
+        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
+
+        requests_mock.get.side_effect = response_mock
+
+        orig_tables = list(self.p_folder.glob('*.csv'))
+        self._tm.update()
+        new_tables = list(self.p_folder.glob('*.csv'))
+        self.assertEqual(len(orig_tables), len(new_tables))
+        self._common_checks(Path(_TEST_CSV_OLD_2).name, {Path(_TEST_CSV_OLD_1).name})
 
     def test_download_new(self):
         """
