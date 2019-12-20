@@ -235,6 +235,23 @@ class TableManager:
         self.__sys_mgr = FileSystemManager(Path(__file__).parent.joinpath(_FOLDER))  # init workspace
         self.__res_mgr = OnlineResourceManager()
 
+    # expose some of the properties for external calls
+    @property
+    def active_table(self):
+        return self.__sys_mgr.active_table
+
+    @property
+    def outdated_tables(self):
+        return self.__sys_mgr.outdated_tables
+
+    @property
+    def resource(self):
+        return self.__res_mgr.resource
+
+    @property
+    def resource_table_name(self):
+        return self.__res_mgr.resource_table_name
+
     def update(self, clear=False):
         """
         check for new currency table
@@ -250,7 +267,7 @@ class TableManager:
             """
             # newer version has larger value in filename
             return new_ > current_
-        
+
         current_name = self.__sys_mgr.active_table
         self.__res_mgr.fetch_latest_resource()
         new_name = self.__res_mgr.resource_table_name
