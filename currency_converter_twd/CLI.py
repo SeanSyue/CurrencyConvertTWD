@@ -9,7 +9,7 @@ from currency_converter_twd.TableManager import csv_downloader, csv_finder
 
 
 # The directory which currency exchange rate table is downloaded and stored
-TABLE_PATH = '/home/pi/WORKSPACE/CurrencyConvertTWD/exchange-rate-tables'
+TABLE_PATH = os.path.join(os.path.dirname(__file__), 'exchange-rate-tables')
 
 
 def update(instance_, file_):
