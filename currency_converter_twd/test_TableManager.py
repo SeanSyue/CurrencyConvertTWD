@@ -16,6 +16,11 @@ config.read('currency_converter_twd/config.ini')
 # The directory which currency exchange rate table is downloaded and stored
 _FOLDER = config['TABLE']['folder']
 
+# param related to requests header
+_FAKE_CONTENT_DISPOSITION = 'fake_content'
+_CONTENT_DISPOSITION_TEMPLATE = 'attachment; filename="{}"'
+
+# file paths to testing table files
 _TEST_CSV_OLD_1 = 'currency_converter_twd/mock_tables/ExchangeRate@201912021600.csv'
 _TEST_CSV_OLD_2 = 'currency_converter_twd/mock_tables/ExchangeRate@201912201451.csv'
 _TEST_CSV_NEW = 'currency_converter_twd/mock_tables/ExchangeRate@201912201528.csv'
@@ -24,13 +29,23 @@ _TEST_CSV_NEW = 'currency_converter_twd/mock_tables/ExchangeRate@201912201528.cs
 class Common:
 
     @staticmethod
-    def read_mock_csv(csv_: Path):
+    def make_response_mock(csv: str):
         """
-        return the content of the reference csv file
-        @param csv_: path to the csv file found
-        @return: the content the reference csv file
+        make mock response by referencing the testing table files
+        @param csv: path to testing table file
+        @return a `Mock()` object
         """
-        return csv_.read_bytes()
+
+        p_mock_csv = Path(csv)
+        mock_csv_name = Path(p_mock_csv).name
+        mock_table_content = p_mock_csv.read_bytes()  # read csv file
+
+        response_mock = Mock()
+        response_mock.return_value.headers = {
+            'Content-Disposition': _CONTENT_DISPOSITION_TEMPLATE.format(mock_csv_name)}
+        response_mock.return_value.content = mock_table_content
+
+        return response_mock
 
 
 class TestTableCaches(TestCase):
@@ -162,8 +177,7 @@ class TestOnlineResourceManager(TestCase):
     def test_fetch_latest_table_name_if_error(self, requests_mock):
         # test if connection succeeded but content went wrong
         fake_mock = Mock()
-        fake_mock.status_code = 200
-        fake_mock.headers = {'Content-Disposition': 'fake_content'}
+        fake_mock.headers = {'Content-Disposition': _FAKE_CONTENT_DISPOSITION}
 
         test_cases = [Timeout, RequestException, fake_mock]
         requests_mock.get.side_effect = test_cases
@@ -196,14 +210,9 @@ class TestOnlineResourceManager(TestCase):
                 shutil.rmtree(folder_)
 
         p_mock_csv = Path(_TEST_CSV_OLD_1)
-        mock_table_content = Common.read_mock_csv(p_mock_csv)
         mock_csv_name = Path(p_mock_csv).name
 
-        response_mock = Mock()
-        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
-        response_mock.return_value.content = mock_table_content
-
-        requests_mock.get.side_effect = response_mock
+        requests_mock.get.side_effect = Common.make_response_mock(_TEST_CSV_OLD_1)
         self.__res_mgr.fetch_latest_resource()
 
         # check if download destination folder not found
@@ -314,12 +323,8 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         """
         test fetch update and if no update is detected
         """
-        mock_csv_name = Path(_TEST_CSV_OLD_2).name
 
-        response_mock = Mock()
-        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
-
-        requests_mock.get.side_effect = response_mock
+        requests_mock.get.side_effect = Common.make_response_mock(_TEST_CSV_OLD_2)
 
         orig_tables = list(self.p_folder.glob('*.csv'))
         self._tm.update()
@@ -335,13 +340,8 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         """
         p_mock_csv = Path(_TEST_CSV_NEW)
         mock_csv_name = p_mock_csv.name
-        mock_table_content = Common.read_mock_csv(p_mock_csv)
 
-        response_mock = Mock()
-        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
-        response_mock.return_value.content = mock_table_content
-
-        requests_mock.get.side_effect = response_mock
+        requests_mock.get.side_effect = Common.make_response_mock(_TEST_CSV_NEW)
 
         orig_tables = list(self.p_folder.glob('*.csv'))
         self._tm.update()
@@ -357,13 +357,8 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         """
         p_mock_csv = Path(_TEST_CSV_NEW)
         mock_csv_name = p_mock_csv.name
-        mock_table_content = Common.read_mock_csv(p_mock_csv)
 
-        response_mock = Mock()
-        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
-        response_mock.return_value.content = mock_table_content
-
-        requests_mock.get.side_effect = response_mock
+        requests_mock.get.side_effect = Common.make_response_mock(_TEST_CSV_NEW)
 
         orig_tables = list(self.p_folder.glob('*.csv'))
         self.assertEqual(len(self.mock_existing_tables), len(orig_tables))
