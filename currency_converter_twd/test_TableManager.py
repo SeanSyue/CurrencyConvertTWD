@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 from requests.exceptions import Timeout, RequestException
 
-from currency_converter_twd.TableManager import TableCaches, FileSystemManager, OnlineResourceManager
+from currency_converter_twd.TableManager import TableCaches, FileSystemManager, OnlineResourceManager, TableManager
 
 config = configparser.ConfigParser()
 config.read('currency_converter_twd/config.ini')
@@ -16,8 +16,9 @@ config.read('currency_converter_twd/config.ini')
 # The directory which currency exchange rate table is downloaded and stored
 _FOLDER = config['TABLE']['folder']
 
-_TEST_CSV_OLD = 'currency_converter_twd/mock_tables/ExchangeRate@201912021600.csv'
-_TEST_CSV_NEW = 'currency_converter_twd/mock_tables/ExchangeRate@201912201451.csv'
+_TEST_CSV_OLD_1 = 'currency_converter_twd/mock_tables/ExchangeRate@201912021600.csv'
+_TEST_CSV_OLD_2 = 'currency_converter_twd/mock_tables/ExchangeRate@201912201451.csv'
+_TEST_CSV_NEW = 'currency_converter_twd/mock_tables/ExchangeRate@201912201528.csv'
 
 
 class TestTableCaches(TestCase):
@@ -189,7 +190,7 @@ class TestOnlineResourceManager(TestCase):
                 # TODO: log file deleting
                 shutil.rmtree(folder_)
 
-        p_mock_csv = Path(_TEST_CSV_OLD)
+        p_mock_csv = Path(_TEST_CSV_OLD_1)
         mock_table_content = __read_mock_csv(p_mock_csv)
         mock_csv_name = Path(p_mock_csv).name
 
@@ -221,7 +222,87 @@ class TestOnlineResourceManager(TestCase):
             self.assertEqual(requests_mock.get.call_count, 1)
 
 
-class TestTableManager(TestCase):
+class TestTableManagerParent(TestCase):
+    p_folder = Path(__file__).parent.joinpath(_FOLDER)
+
+    @contextmanager
+    def _mock_tables_test(self, *tables_):
+        """
+        wrapper for setup and teardown
+        makes mocked tables as workspace
+        set "TableManager" instance for testing
+        remove folder generated during tearing down
+        @param tables_: mocked tables
+        """
+
+        def __make_existed_tables(folder_, *tables):
+            for test_csv in tables:
+                src = str(Path(test_csv).resolve())
+                des = str(folder_.joinpath(Path(test_csv).name))
+                shutil.copy(src, des)
+        try:
+            # TODO: log file making
+            self.p_folder.mkdir(exist_ok=True)
+            __make_existed_tables(self.p_folder, *tables_)
+            self.__tm = TableManager()
+            yield
+        finally:
+            # TODO: log file deleting
+            shutil.rmtree(self.p_folder)
+
+    def _common_checks(self, expected_active_table, expected_outdated_tables):
+        # Check if table folder really exists
+        self.assertTrue(self.p_folder.exists())
+        # inspect internal parameters of the `FileSystemManager`
+        self.assertEqual(self.__tm.active_table, expected_active_table)
+        self.assertEqual(self.__tm.outdated_tables, expected_outdated_tables)
+        # inspect internal parameters of the `OnlineResourceManager`
+        self.assertIsNone(self.__tm.resource)
+        self.assertIsNone(self.__tm.resource_table_name)
+
+    def __init__(self, context_, *args, **kwargs):
+        """
+        create text context for testing
+        @param context_: context for different test case
+        """
+        super().__init__(*args, **kwargs)
+        self.__test_context = context_
+
+    # Ref:
+    # https://stackoverflow.com/questions/25233619/testing-methods-each-with-a-different-setup-teardown/25234865#25234865
+    def setUp(self) -> None:
+        self.__test_context.__enter__()
+
+    def tearDown(self) -> None:
+        self.__test_context.__exit__(None, None, None)
+
+
+class TestTableManagerWithEmptyFolder(TestTableManagerParent):
+
+    def __init__(self, *args, **kwargs):
+        self.__test_context = self._mock_tables_test()
+        super().__init__(self.__test_context, *args, **kwargs)
+
+    def test_init_with_empty_folder(self):
+        """
+        test if table folder is empty during the init phase
+        """
+        self._common_checks('', set())
+
+
+class TestTableManagerWithExistingTables(TestTableManagerParent):
+    mock_existing_tables = (_TEST_CSV_OLD_1, _TEST_CSV_OLD_2)
+
+    def __init__(self, *args, **kwargs):
+        self.__test_context = self._mock_tables_test(*self.mock_existing_tables)
+        super().__init__(self.__test_context, *args, **kwargs)
+
+    def test_init_with_tables_existing(self):
+        """
+        test if internal parameters is set correctly if some tables already existed during the init phase
+        """
+        self._common_checks(Path(_TEST_CSV_OLD_2).name, {Path(_TEST_CSV_OLD_1).name})
+
     def test_if_no_update(self):
         """
         test fetch update and if no update is detected
