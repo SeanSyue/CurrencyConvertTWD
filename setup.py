@@ -12,6 +12,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     author='Yu-Chen Xue',
     install_requires=[item.strip().replace('==', '>=') for item in open('./requirements.txt').readlines()],
