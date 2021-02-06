@@ -1,8 +1,11 @@
 *.csv
 *.txt
 !requirements.txt
-.idea/**/workspace.xml
+
 dist/*
 build/*
 *egg*
 */__pycache__/*
+
+.idea/**/workspace.xml
+.vscode
