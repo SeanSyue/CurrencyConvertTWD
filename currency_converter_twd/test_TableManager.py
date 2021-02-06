@@ -21,6 +21,18 @@ _TEST_CSV_OLD_2 = 'currency_converter_twd/mock_tables/ExchangeRate@201912201451.
 _TEST_CSV_NEW = 'currency_converter_twd/mock_tables/ExchangeRate@201912201528.csv'
 
 
+class Common:
+
+    @staticmethod
+    def read_mock_csv(csv_: Path):
+        """
+        return the content of the reference csv file
+        @param csv_: path to the csv file found
+        @return: the content the reference csv file
+        """
+        return csv_.read_bytes()
+
+
 class TestTableCaches(TestCase):
 
     def setUp(self) -> None:
@@ -167,13 +179,6 @@ class TestOnlineResourceManager(TestCase):
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
     def test_download_table(self, requests_mock):
-        def __read_mock_csv(csv_: Path):
-            """
-            return the content of the reference csv file
-            @param csv_: path to the csv file found
-            @return: the content the reference csv file
-            """
-            return csv_.read_bytes()
 
         @contextmanager
         def __mkdir_test_context(folder_):
@@ -191,7 +196,7 @@ class TestOnlineResourceManager(TestCase):
                 shutil.rmtree(folder_)
 
         p_mock_csv = Path(_TEST_CSV_OLD_1)
-        mock_table_content = __read_mock_csv(p_mock_csv)
+        mock_table_content = Common.read_mock_csv(p_mock_csv)
         mock_csv_name = Path(p_mock_csv).name
 
         response_mock = Mock()
@@ -324,11 +329,26 @@ class TestTableManagerWithExistingTables(TestTableManagerParent):
         self.assertEqual(len(orig_tables), len(new_tables))
         self._common_checks(Path(_TEST_CSV_OLD_2).name, {Path(_TEST_CSV_OLD_1).name})
 
-    def test_download_new(self):
+    @patch('currency_converter_twd.TableManager.requests', autospec=True)
+    def test_download_new(self, requests_mock):
         """
         test fetch update and download new currency table
         """
-        pass
+        p_mock_csv = Path(_TEST_CSV_NEW)
+        mock_csv_name = p_mock_csv.name
+        mock_table_content = Common.read_mock_csv(p_mock_csv)
+
+        response_mock = Mock()
+        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
+        response_mock.return_value.content = mock_table_content
+
+        requests_mock.get.side_effect = response_mock
+
+        orig_tables = list(self.p_folder.glob('*.csv'))
+        self._tm.update()
+        new_tables = list(self.p_folder.glob('*.csv'))
+        self.assertEqual(len(orig_tables) + 1, len(new_tables))
+        self._common_checks(mock_csv_name, {Path(_TEST_CSV_OLD_1).name, Path(_TEST_CSV_OLD_2).name})
 
     def test_download_new_with_cleanup(self):
         """
