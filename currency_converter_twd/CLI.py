@@ -46,6 +46,22 @@ def timestamp(tm_):
         return
 
 
+def timestamp(instance_):
+    try:
+        csv_file = csv_finder(TABLE_PATH)
+        time_stamp = re.search(r'ExchangeRate@(.*?)\.csv', csv_file).group(1)
+        time_stamp_raw = datetime.datetime.strptime(time_stamp,'%Y%m%d%H%M')
+        time_stamp = time_stamp_raw.strftime('%Y-%m-%d %H:%M')
+
+        print("== Last update ==\n"
+              "{}".format(time_stamp))
+    except FileNotFoundError:
+        print("[ERROR] Can not find currency exchange table file in {}! "
+              "Please run `cvtwd update` to download a currency table"
+              "or please check your network connection".format(TABLE_PATH))
+        return
+
+
 def info(instance_):
     print("==============================\n"
           "AVAILABLE EXCHANGE TYPE:")
@@ -170,9 +186,9 @@ def run_cli():
     args = parser.parse_args()
 
     if args.which == 'update':
-        update(tm, instance)
+        update(instance, file)
     elif args.which == 'timestamp':
-        timestamp(tm)
+        timestamp(instance)
     elif args.which == 'info':
         info(instance)
     elif args.which == 'lookup':
