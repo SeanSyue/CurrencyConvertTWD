@@ -1,7 +1,8 @@
 import re
 import os
 import configparser
-from typing import List
+import shutil
+from typing import Set
 from pathlib import Path
 
 import requests
@@ -16,20 +17,18 @@ _URL = config['TABLE']['url']
 _FOLDER = config['TABLE']['folder']
 
 
-class FileSystemManager:
+class TableCaches:
     __active_table: str
-    __outdated_tables: List[str]
+    __outdated_tables: Set[str]
 
-    def __init__(self, root_):
+    def __init__(self):
         """
         Store names of different currency tables in the file system
         @var self.__active_table: names of active currency table
         @var self.__outdated_tables: names of outdated currency table
-        @param root_: str or PathLike object. root directory where table folder exists
         """
         self.__active_table = ''
-        self.__outdated_tables = list()
-        self.__table_folder = Path(root_).joinpath(_FOLDER)
+        self.__outdated_tables = set()
 
     @property
     def outdated_tables(self):
@@ -45,12 +44,12 @@ class FileSystemManager:
         initialize self.__outdated_tables with list of table names
         @param tables: names of outdated currency table
         """
-        if not isinstance(tables, list):
-            raise TypeError("Variable `outdated_tables` should be initialized with an list object!")
+        if not isinstance(tables, set):
+            raise TypeError("Variable `outdated_tables` should be initialized with a set object!")
 
         # empty `self.__outdated_tables` before re-populating
-        if len(self.__outdated_tables) is not 0:
-            self.__outdated_tables = list()
+        if len(self.__outdated_tables) == 0:
+            self.__outdated_tables = set()
         self.__outdated_tables = tables
 
     @active_table.setter
@@ -59,25 +58,70 @@ class FileSystemManager:
         set new active currency table, and move the previous one into the `__outdated_tables` list
         @param table: names of new currency table
         """
-        if self.__active_table is not '':
-            self.__outdated_tables.append(self.__active_table)
+        if not isinstance(table, str):
+            raise TypeError("Variable `active_table` should be initialized with a str object!")
+
+        if self.__active_table != '':
+            self.__outdated_tables.add(self.__active_table)
         self.__active_table = table
 
-    def initialize_table_folder(self):
+
+class FileSystemManager:
+
+    def __init__(self, folder_name_):
+        """
+        Handles operations on file system level
+        @param folder_name_: str or PathLike object. destination where table folder exists
+        """
+
+        self.__table_folder = Path(folder_name_)
+        self.__table_caches = TableCaches()
+
+        # initialize a workspace once the instance is made
+        self.__initialize_table_folder()
+
+    # expose some of the properties for external calls
+    @property
+    def table_folder(self):
+        return self.__table_folder
+
+    @property
+    def outdated_tables(self):
+        return self.__table_caches.outdated_tables
+
+    @outdated_tables.setter
+    def outdated_tables(self, value):
+        self.__table_caches.outdated_tables = value
+
+    @property
+    def active_table(self):
+        return self.__table_caches.active_table
+
+    @active_table.setter
+    def active_table(self, value):
+        self.__table_caches.active_table = value
+
+    def __initialize_table_folder(self):
         """
         initialize currency table under certain directory
+        set `self.active_table` and `self.outdated_tables` respectively
         """
-        # TODO: if `self.__table_folder` is not existed, then mkdir
-        pass
+        # TODO: log init table folder
+        self.__table_folder.mkdir(exist_ok=True)
+        all_tables = {self.get_relevant_table_name(table) for table in self.__table_folder.glob('*.csv')}
+        self.outdated_tables = all_tables
+        self.active_table = max(all_tables, default='')
+        # discard `active_table` from `outdated_tables`
+        self.outdated_tables.discard(self.active_table)
 
     def translate_to_abs_table_path(self, name_):
         """
         translate to the absolute pathname of a currency table
         by referencing the file system
         @param name_: the name of a currency table
-        @return: PathLike object
+        @return: str object
         """
-        return self.__table_folder.joinpath(name_)
+        return str(self.__table_folder.joinpath(name_))
 
     @staticmethod
     def get_relevant_table_name(path_):
@@ -88,11 +132,18 @@ class FileSystemManager:
         """
         return Path(path_).name
 
-    def delete_outdated_tables(self):
-        # TODO: For tables in self.outdated_tables, do delete
-        # TODO: self.outdated_tables = list()
-        # TODO: Catch `FileNotFoundError`
-        pass
+    def delete_outdated_tables(self, quick_run=True):
+        """
+        delete outdated table files according to table caches
+        @param quick_run: if set to False, re-initialize table caches
+        """
+        # TODO: log `FileNotFoundError`
+        if not quick_run:  # re-initialize workspace
+            self.__initialize_table_folder()
+        for table in self.__table_caches.outdated_tables:
+            Path(self.translate_to_abs_table_path(table)).unlink(missing_ok=True)
+        # Reset outdated tables
+        self.__table_caches.outdated_tables = set()
 
 
 class OnlineResourceManager:
@@ -139,12 +190,12 @@ class OnlineResourceManager:
 class TableManager:
 
     def __init__(self):
-        self.__sys_mgr = FileSystemManager(Path(__file__).parent)
+        self.__sys_mgr = FileSystemManager(Path(__file__).parent.joinpath(_FOLDER))
         self.__res_mgr = OnlineResourceManager()
 
     def initialize(self):
         # TODO: Check if table folder exists
-        # TODO: if not, `self.__sys_mgr.initialize_table_folder(Path(__file__).parent)`
+        # TODO: if not, `self.__sys_mgr.__initialize_table_folder(Path(__file__).parent)`
         # TODO: populate `self.__sys_mgr.active_table`
         # TODO: and `self.__sys_mgr.active_table`
         # TODO: with existing table files
@@ -157,11 +208,7 @@ class TableManager:
         pass
 
     def clean_up(self):
-        if len(self.__sys_mgr.outdated_tables) is 0:
-            print("No outdated tables detected")
-            return 'OK'
-        else:
-            self.__sys_mgr.delete_outdated_tables()
+        self.__sys_mgr.delete_outdated_tables()
 
 
 def csv_finder(folder):
