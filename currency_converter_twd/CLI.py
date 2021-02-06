@@ -8,7 +8,7 @@ import configparser
 import argparse
 import textwrap
 from currency_converter_twd.Converter import CurrencyConverter
-from currency_converter_twd.TableManager import csv_downloader, csv_finder
+from currency_converter_twd.TableManager import TableManager
 
 config_file = 'currency_converter_twd/config.ini'
 config = configparser.ConfigParser()
@@ -18,17 +18,21 @@ config.read(config_file)
 TABLE_PATH = os.path.join(os.path.dirname(__file__), config['TABLE']['folder'])
 
 
-def update(instance_, file_):
-    print("[INFO] finding for table...")
-    file_name = csv_downloader(folder=TABLE_PATH)
-    print("[INFO] Downloaded file {}. Loading data...".format(file_name))
-    instance_.load_data(file_)
-    print("[INFO] Done")
+def update(tm_, instance_):
+    tm_.update()
+    file = tm_.abs_active_table
+    instance_.load_data(file)
 
 
-def timestamp(instance_):
+def timestamp(tm_):
+    """
+    show when was the latest table published
+    # TODO: also get the time when it was downloaded to the local file system
+    @param tm_: the Table Manager instance
+    @return: the datetime for publishing of the latest table published
+    """
     try:
-        csv_file = csv_finder(TABLE_PATH)
+        csv_file = tm_.abs_active_table
         time_stamp = re.search(r'ExchangeRate@(.*?)\.csv', csv_file).group(1)
         time_stamp_raw = datetime.datetime.strptime(time_stamp,'%Y%m%d%H%M')
         time_stamp = time_stamp_raw.strftime('%Y-%m-%d %H:%M')
@@ -64,22 +68,23 @@ def convert(instance_, args_):
 
 
 def run_cli():
-    # For the first run, make the TABLE_PATH directory
-    if not os.path.isdir(TABLE_PATH):
-        os.makedirs(TABLE_PATH)
+    # # For the first run, make the TABLE_PATH directory
+    # if not os.path.isdir(TABLE_PATH):
+    #     os.makedirs(TABLE_PATH)
+    #
+    # # if not csv file was found, download a new one
+    # # if file has not unsuccessful downloaded, print error message, then quit program
+    # try:
+    #     csv_file = csv_finder(TABLE_PATH)
+    # except FileNotFoundError:
+    #     print("[ERROR] Can not find currency exchange table file in {}! "
+    #           "Please check network connectivity, "
+    #           "then rerun this program to auto download a new file".format(TABLE_PATH))
+    #     return
 
-    # if not csv file was found, download a new one
-    # if file has not unsuccessful downloaded, print error message, then quit program
-    try:
-        csv_file = csv_finder(TABLE_PATH)
-    except FileNotFoundError:
-        print("[ERROR] Can not find currency exchange table file in {}! "
-              "Please check network connectivity, "
-              "then rerun this program to auto download a new file".format(TABLE_PATH))
-        return
-
-    # initiate CurrencyConverter object
-    file = os.path.join(TABLE_PATH, csv_file)
+    # initiate the Table Manager instance and the CurrencyConverter object
+    tm = TableManager()
+    file = tm.abs_active_table
     instance = CurrencyConverter()
     instance.load_data(file)
 
@@ -164,9 +169,9 @@ def run_cli():
     args = parser.parse_args()
 
     if args.which == 'update':
-        update(instance, file)
+        update(tm, instance)
     elif args.which == 'timestamp':
-        timestamp(instance)
+        timestamp(tm)
     elif args.which == 'info':
         info(instance)
     elif args.which == 'lookup':
