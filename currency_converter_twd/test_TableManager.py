@@ -69,14 +69,16 @@ class TestFileSystemManagerParent(TestCase):
         """
         do delete outdated tables
         check if table cache is set properly
-        check if intended files are cleaned
+        check if intended files are cleaned and active table exists
         @param folder_: mocked folder
         @param expected_active_table_: expected value for active table
         """
         self.__sys_mgr.delete_outdated_tables()
         self.assertEqual(self.__sys_mgr.active_table, expected_active_table_)
         self.assertEqual(len(self.__sys_mgr.outdated_tables), 0)
-        self.assertEqual([n.name for n in Path(folder_).glob('*.csv')][0], expected_active_table_)
+        remaining_tables = [n.name for n in Path(folder_).glob('*.csv')]
+        self.assertEqual(remaining_tables[0], expected_active_table_)
+        self.assertEqual(len(remaining_tables), 1)
 
 
 class TestFileSystemManagerWithExistingTables(TestFileSystemManagerParent):
@@ -100,5 +102,5 @@ class TestFileSystemManagerWithNonExistedFolder(TestFileSystemManagerParent):
     __mock_non_existed_table_folder = Path(__file__).parent.joinpath('pseudo-' + _FOLDER)
 
     def test_delete_outdated_tables(self):
-        with self._mock_tables_test(self.__mock_non_existed_table_folder):
+        with self._mock_tables_test(self.__mock_non_existed_table_folder, mkdir_=False):
             self._do_delete_assertion(self.__mock_non_existed_table_folder, '')
