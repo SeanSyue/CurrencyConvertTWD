@@ -84,6 +84,7 @@ def run_cli():
 
     # initiate the Table Manager instance and the CurrencyConverter object
     tm = TableManager()
+    tm.update()
     file = tm.abs_active_table
     instance = CurrencyConverter()
     instance.load_data(file)
