@@ -9,7 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/erc.egg-info" />
       <excludeFolder url="file://$MODULE_DIR$/exchange-rate-tables" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.6 (cvt)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.6 (cvtwd)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
