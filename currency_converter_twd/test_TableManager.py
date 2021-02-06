@@ -53,9 +53,9 @@ class TestTableCaches(TestCase):
         self.__table_caches.active_table = 'new_2'
 
         # Check if `active_table` set correctly
-        self.assertEqual(self.__table_caches.active_table, 'new_2')
+        self.assertEqual('new_2', self.__table_caches.active_table)
         # Check if `outdated_tables` caches previous `active_table`
-        self.assertEqual(self.__table_caches.outdated_tables, {'existed_1', 'existed_2', 'new_1'})
+        self.assertEqual({'existed_1', 'existed_2', 'new_1'}, self.__table_caches.outdated_tables)
 
 
 class TestFileSystemManagerParent(TestCase):
@@ -93,14 +93,14 @@ class TestFileSystemManagerParent(TestCase):
         """
         self.__sys_mgr.delete_outdated_tables()
         # check if table cache is set properly
-        self.assertEqual(self.__sys_mgr.active_table, expected_active_table_)
-        self.assertEqual(len(self.__sys_mgr.outdated_tables), 0)
+        self.assertEqual(expected_active_table_, self.__sys_mgr.active_table)
+        self.assertEqual(0, len(self.__sys_mgr.outdated_tables))
 
         # check if only expected active table remain in the folder
         indices = list(Path(folder_).glob('*.csv'))
         remaining_tables = [n.name for n in Path(folder_).glob('*.csv')] if indices else ['']
-        self.assertEqual(len(remaining_tables), 1)
-        self.assertEqual(remaining_tables[0], expected_active_table_)
+        self.assertEqual(1, len(remaining_tables))
+        self.assertEqual(expected_active_table_, remaining_tables[0])
 
     def __init__(self, context_, *args, **kwargs):
         """
@@ -171,11 +171,11 @@ class TestOnlineResourceManager(TestCase):
         # loop for testing cases
         for n in range(len(test_cases)):
             self.assertWarns(UserWarning, self.__res_mgr.fetch_latest_resource)
-            self.assertEqual(self.__res_mgr.resource, None)
-            self.assertEqual(self.__res_mgr.resource_table_name, None)
+            self.assertIsNone(self.__res_mgr.resource)
+            self.assertIsNone(self.__res_mgr.resource_table_name)
 
         # check if requests function was called correctly
-        self.assertEqual(requests_mock.get.call_count, len(test_cases))
+        self.assertEqual(len(test_cases), requests_mock.get.call_count)
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
     def test_download_table(self, requests_mock):
@@ -224,7 +224,7 @@ class TestOnlineResourceManager(TestCase):
             self.assertIsNone(self.__res_mgr.resource_table_name)
 
             # check if requests function was called correctly
-            self.assertEqual(requests_mock.get.call_count, 1)
+            self.assertEqual(1, requests_mock.get.call_count)
 
 
 class TestTableManagerParent(TestCase):
@@ -260,8 +260,8 @@ class TestTableManagerParent(TestCase):
         # Check if table folder really exists
         self.assertTrue(self.p_folder.exists())
         # inspect internal parameters of the `FileSystemManager`
-        self.assertEqual(self._tm.active_table, expected_active_table)
-        self.assertEqual(self._tm.outdated_tables, expected_outdated_tables)
+        self.assertEqual(expected_active_table, self._tm.active_table)
+        self.assertEqual(expected_outdated_tables, self._tm.outdated_tables)
         # inspect internal parameters of the `OnlineResourceManager`
         self.assertIsNone(self._tm.resource)
         self.assertIsNone(self._tm.resource_table_name)
