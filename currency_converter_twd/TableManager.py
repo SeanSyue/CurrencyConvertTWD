@@ -1,11 +1,12 @@
 import re
 import os
 import configparser
-import shutil
+import warnings
 from typing import Set
 from pathlib import Path
 
 import requests
+from requests.exceptions import Timeout, RequestException
 
 config = configparser.ConfigParser()
 config.read('currency_converter_twd/config.ini')
@@ -153,38 +154,78 @@ class OnlineResourceManager:
         self.__resource = None
         self.__resource_table_name = None
 
-    def __query_table_resource(self):
-        """
-        post online currency table url, used for checking connectivity
-        @return status code
-        """
-        # TODO: with requests.Session(), post `__url`, if network connections failed, return status code
-        # TODO: if code==200, self.__resource = resource
-        pass
+    # expose local variables
+    @property
+    def resource_table_name(self):
+        return self.__resource_table_name
 
-    def __parse_resource_table_name(self):
-        """
-        @return return the name of the queried currency table for the resource
-        """
-        # TODO: _get_resource_table_name using `re` module
-        # TODO: self.__resource_table_name = resource_table_name
-        pass
+    @property
+    def resource(self):
+        return self.__resource
 
-    def fetch_latest_table_name(self):
+    def fetch_latest_resource(self):
         """
-        wrapper function.
+        request for the latest table resource
+        if connection was success, analyse the resource
+        if resource was correct, set `self.__resource` and `self.__resource_table_name` explicitly
+        else, reset `self.__resource` and `self.__resource_table_name`
         """
-        self.__query_table_resource()
-        # TODO: if status == 200, `self.__parse_resource_table_name()`
-        pass
+        def analyse_resource(resource_):
+            """
+            if resource is correct, extract the table name from the resource
+            else, set both `self.__resource` and `self.__resource_table_name` as none
+            @return return original source if source is correct, else return none
+            @return return the name of the queried currency table for the resource if the source is correct
+            """
+            # if `resource_` is none, set both `self.__resource` and `self.__resource_table_name` as none
+            if resource_ is None:
+                return None, None
+
+            content = resource_.headers['Content-Disposition']
+            pattern = r'"(.*?)"'
+            match = re.search(pattern, content)
+            try:
+                table_name = match.group(1)
+            # if match is None, set both `self.__resource` and `self.__resource_table_name` as none
+            except AttributeError:
+                warnings.warn("Table name is set to be value `None`! Should check for resource correctness! ")
+                return None, None
+
+            # if matched, return `self.__resource` and set `self.__resource_table_name` correspondingly
+            return resource_, table_name
+
+        # query for latest resources
+        try:
+            self.__resource = requests.get(self.__url, stream=True)
+        except Timeout:
+            warnings.warn("Oops! timeout!")
+        except RequestException as e:
+            warnings.warn(f"Connection failed with {e}")
+
+        # if response was success, analyse the resource
+        # TODO: handle more connection errors
+        # TODO: log requesting
+        self.__resource, self.__resource_table_name = analyse_resource(self.__resource)
 
     def download_table(self, destination_):
         """
         download a new table from the online resource
         @param destination_: the destination pathname of the newly downloaded table
         """
-        # TODO: download currency table to target
-        pass
+        p_destination = Path(destination_)
+        if not p_destination.exists():
+            raise FileNotFoundError(f"{destination_} does not exists!")
+
+        if self.__resource and self.__resource_table_name is not None:
+            with p_destination.join(self.__resource_table_name).open('wb') as csv:
+                for chunk in self.__resource.iter_content(chunk_size=1024):
+                    csv.write(chunk)
+                # TODO: log complete
+            # reset local variables
+            self.__resource = None
+            self.__resource_table_name = None
+        else:
+            raise ValueError("Should fetch latest resource first!")
 
 
 class TableManager:

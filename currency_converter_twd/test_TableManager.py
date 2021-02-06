@@ -3,9 +3,11 @@ import shutil
 from unittest import TestCase
 from pathlib import Path
 from contextlib import contextmanager
+from unittest.mock import Mock, patch
 
-from currency_converter_twd.TableManager import TableCaches
-from currency_converter_twd.TableManager import FileSystemManager
+from requests.exceptions import Timeout, RequestException
+
+from currency_converter_twd.TableManager import TableCaches, FileSystemManager, OnlineResourceManager
 
 config = configparser.ConfigParser()
 config.read('currency_converter_twd/config.ini')
@@ -132,3 +134,32 @@ class TestFileSystemManagerWithNonExistedFolder(TestFileSystemManagerParent):
 
     def test_delete_outdated_tables(self):
         self._do_delete_testing(self.__mock_non_existed_table_folder, '')
+
+
+class TestOnlineResourceManager(TestCase):
+
+    def setUp(self) -> None:
+        self.__res_mgr = OnlineResourceManager()
+
+    @patch('currency_converter_twd.TableManager.requests', autospec=True)
+    def test_fetch_latest_table_name_if_error(self, requests_mock):
+
+        # test if connection succeeded but content went wrong
+        fake_mock = Mock()
+        fake_mock.status_code = 200
+        fake_mock.headers = {'Content-Disposition': 'fake_content'}
+
+        test_cases = [Timeout, RequestException, fake_mock]
+        requests_mock.get.side_effect = test_cases
+
+        # loop for testing cases
+        for n in range(len(test_cases)):
+            self.assertWarns(UserWarning, self.__res_mgr.fetch_latest_resource)
+            self.assertEqual(self.__res_mgr.resource, None)
+            self.assertEqual(self.__res_mgr.resource_table_name, None)
+
+        # check if requests function was called correctly
+        self.assertEqual(requests_mock.get.call_count, len(test_cases))
+
+    def test_download_table(self):
+        pass
