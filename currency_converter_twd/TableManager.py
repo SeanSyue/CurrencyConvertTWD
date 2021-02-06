@@ -217,7 +217,7 @@ class OnlineResourceManager:
             raise FileNotFoundError(f"{destination_} does not exists!")
 
         if self.__resource and self.__resource_table_name is not None:
-            with p_destination.join(self.__resource_table_name).open('wb') as csv:
+            with p_destination.joinpath(self.__resource_table_name).open('wb') as csv:
                 for chunk in self.__resource.iter_content(chunk_size=1024):
                     csv.write(chunk)
                 # TODO: log complete

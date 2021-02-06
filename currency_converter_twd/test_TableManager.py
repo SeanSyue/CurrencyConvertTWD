@@ -3,7 +3,7 @@ import shutil
 from unittest import TestCase
 from pathlib import Path
 from contextlib import contextmanager
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
 from requests.exceptions import Timeout, RequestException
 
@@ -14,6 +14,8 @@ config.read('currency_converter_twd/config.ini')
 
 # The directory which currency exchange rate table is downloaded and stored
 _FOLDER = config['TABLE']['folder']
+
+_TEST_CSV_FOLDER = 'test_mock_table'
 
 
 class TestTableCaches(TestCase):
@@ -143,7 +145,6 @@ class TestOnlineResourceManager(TestCase):
 
     @patch('currency_converter_twd.TableManager.requests', autospec=True)
     def test_fetch_latest_table_name_if_error(self, requests_mock):
-
         # test if connection succeeded but content went wrong
         fake_mock = Mock()
         fake_mock.status_code = 200
@@ -161,5 +162,67 @@ class TestOnlineResourceManager(TestCase):
         # check if requests function was called correctly
         self.assertEqual(requests_mock.get.call_count, len(test_cases))
 
-    def test_download_table(self):
-        pass
+    @patch('currency_converter_twd.TableManager.requests', autospec=True)
+    def test_download_table(self, requests_mock):
+        def __find_mock_csv(root_):
+            """
+            find reference currency table csv file under given root
+            @return: path to the csv file found
+            """
+            p = Path(__file__).parent.joinpath(root_)
+            files = list(p.glob('*.csv'))
+
+            if len(files) != 0:
+                return files[0]
+            else:
+                raise FileNotFoundError(f"No currency table found under root: {p}")
+
+        def __read_mock_csv(csv_: Path):
+            """
+            return the content of the reference csv file
+            @param csv_: path to the csv file found
+            @return: the content the reference csv file
+            """
+            return csv_.read_bytes()
+
+        @contextmanager
+        def __mkdir_test_context(folder_):
+            try:
+                # TODO: log file making
+                folder_.mkdir(exist_ok=True)  # make mock table folder
+                yield
+            finally:
+                # TODO: log file deleting
+                shutil.rmtree(folder_)
+
+        mock_csv_location = __find_mock_csv(_TEST_CSV_FOLDER)
+        mock_table_content = __read_mock_csv(mock_csv_location)
+        mock_csv_name = mock_csv_location.name
+
+        response_mock = MagicMock()
+        response_mock.return_value.headers = {'Content-Disposition': f'attachment; filename="{mock_csv_name}"'}
+        response_mock.return_value.read.side_effect = mock_table_content
+
+        requests_mock.get.side_effect = response_mock
+        self.__res_mgr.fetch_latest_resource()
+
+        # check if download destination folder not found
+        with self.assertRaises(FileNotFoundError):
+            self.__res_mgr.download_table(Path(__file__).parent.joinpath('non-existed-location'))
+
+        # check if download successful
+        mock_download_root = Path(__file__).parent.joinpath('mock-download-root')
+        with __mkdir_test_context(mock_download_root):
+            # mock_download_root.mkdir(exist_ok=True)
+            self.__res_mgr.download_table(mock_download_root)
+
+            # check if csv file really exists
+            mock_downloaded_csv = mock_download_root.joinpath(mock_csv_name)
+            self.assertTrue(mock_downloaded_csv.exists())
+            # TODO: check csv file validity
+            # check if internal properties set correctly
+            self.assertIsNone(self.__res_mgr.resource)
+            self.assertIsNone(self.__res_mgr.resource_table_name)
+
+            # check if requests function was called correctly
+            self.assertEqual(requests_mock.get.call_count, 1)
